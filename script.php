@@ -1,15 +1,28 @@
 <?php
+// SETUP SIMPLE CLASS AUTOLOADING
+spl_autoload_register(function ($class_name) {
+    include './lib/' . $class_name . '.php';
+});
+
 // IGNORE NOTICES
 error_reporting(E_ALL & ~E_NOTICE);
 
-$frameDir = './framesY/';
-mdir($frameDir);
-
-$input = './cap/1*/';
-foreach (glob($input) as $fileDir) {
-    convertImages($fileDir, $frameDir);
+// Get dir from cli argument
+$inputPath = $argv[1] ?? '';
+if (!is_dir($inputPath . '/cap')) {
+    throw new Exception('Need valid dir as argument');
 }
-createVideo($frameDir);
+
+$outputPath = $inputPath . '/output';
+Dir::make($outputPath);
+
+$capWildcardPath = $inputPath . '/cap/*';
+$capWildcardPath = $inputPath . '/cap/12';
+foreach (glob($capWildcardPath) as $imageFolder) {
+    Frame::convert($imageFolder, $outputPath);
+    //convertImages($fileDir, $frameDir);
+}
+//createVideo($frameDir);
 exit();
 
 function convertImages($fileDir, $frameDir) {
