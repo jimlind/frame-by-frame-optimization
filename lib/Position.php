@@ -1,6 +1,7 @@
 <?php
 class Position {
-    protected static $blackThreshold = 700;
+    protected static $blackThreshold = 680;
+    protected static $blackPixelQuantity = 10;
     protected static $whiteThreshold = 50;
     protected static $sproketXValue = 400;
 
@@ -27,11 +28,19 @@ class Position {
         $yPosition = imagesy($imageResource) - 1;
 
         $failure = false;
+        $blackPixelCount = 0;
         while (!$failure) {
             $colorValue = self::getAverageColor($imageResource, $width, $yPosition, $failure);
             if ($colorValue > self::$blackThreshold) {
-                return $yPosition;
+                $blackPixelCount++;
+            } else {
+                $blackPixelCount = 0;
             }
+
+            if ($blackPixelCount >= self::$blackPixelQuantity) {
+                return $yPosition - self::$blackPixelQuantity;
+            }
+
             $yPosition--;
         }
 
