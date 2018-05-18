@@ -1,6 +1,6 @@
 <?php
 class Position {
-    protected static $blackThreshold = 680;
+    protected static $blackThreshold = 660;
     protected static $blackPixelQuantity = 10;
     protected static $whiteThreshold = 50;
     protected static $sproketXValue = 400;
@@ -25,26 +25,33 @@ class Position {
 
     protected static function findBlackBorderBottom($imageResource): int {
         $width = imagesx($imageResource) - 1;
-        $yPosition = imagesy($imageResource) - 1;
+        $yPosition = 0;
+        $colorValueList = [];
 
         $failure = false;
-        $blackPixelCount = 0;
         while (!$failure) {
             $colorValue = self::getAverageColor($imageResource, $width, $yPosition, $failure);
             if ($colorValue > self::$blackThreshold) {
-                $blackPixelCount++;
-            } else {
-                $blackPixelCount = 0;
+                // Create a list of all "black pixels"
+                $colorValueList[] = $colorValue;
             }
 
-            if ($blackPixelCount >= self::$blackPixelQuantity) {
-                return $yPosition - self::$blackPixelQuantity;
+            if (self::isBlackPixelQuantityMet($colorValueList) && $colorValue < self::$blackThreshold) {
+                // Get the average pixel difference and calculate an offset
+                // Darker borders get offset more because the relative fuzzy boarder is darker
+                $averagePixelDifference = self::avg($colorValueList) - self::$blackThreshold;
+                $darknessOffset = $diff / -2;
+                return $yPosition - $darknessOffset;
             }
 
-            $yPosition--;
+            $yPosition++;
         }
 
         return 0;
+    }
+
+    protected static function isBlackPixelQuantityMet($colorValueList) {
+        return count($colorValueList) > self::$blackPixelQuantity;
     }
 
     protected static function findSproketMiddle($imageResource): int {
@@ -107,5 +114,9 @@ class Position {
     
         $colors = imagecolorsforindex($imageResource, $rgb);
         return (256 * 3) - $colors['red'] - $colors['green'] - $colors['blue'];
+    }
+
+    protected static function avg($list) {
+        return array_sum($list) / count($list);
     }
 }
