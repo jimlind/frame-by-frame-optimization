@@ -17,12 +17,10 @@ $outputPath = $inputPath . '/output';
 Dir::make($outputPath);
 
 $capWildcardPath = $inputPath . '/cap/*';
-$capWildcardPath = $inputPath . '/cap/12';
 foreach (glob($capWildcardPath) as $imageFolder) {
     Frame::convert($imageFolder, $outputPath);
-    //convertImages($fileDir, $frameDir);
 }
-//createVideo($frameDir);
+Video::convert($outputPath);
 exit();
 
 function convertImages($fileDir, $frameDir) {
@@ -83,64 +81,6 @@ function convertImages($fileDir, $frameDir) {
         echo $cleanFilePath.' written'.PHP_EOL;
     }
 }
-
-function createVideo($frameDir) {
-    $cleanGlob = $frameDir . '1*/' . 'c*.jpeg';
-    $stabilitySectionOutput = $frameDir . 'stability.mp4';
-    $stabilitySectionCommand = [
-        'ffmpeg',
-        '-pattern_type glob',
-        '-i "'.$cleanGlob.'"',
-        '-vf crop=iw:80:0:0',
-        '-c:v libx264',
-        '-preset ultrafast',
-        '-y '.$stabilitySectionOutput,
-    ];
-    print_r(implode(' ', $stabilitySectionCommand));
-    shell_exec(implode(' ', $stabilitySectionCommand));
-
-    $stabilityResultOutput = $frameDir . 'out.trf';
-    $stabilityDetectCommand = [
-        'ffmpeg',
-        '-i '.$stabilitySectionOutput,
-        '-vf vidstabdetect=shakiness=10:stepsize=1:mincontrast=0:result="'.$stabilityResultOutput.'"',
-        '-f null -',
-    ];
-    print_r(implode(' ', $stabilityDetectCommand));
-    shell_exec(implode(' ', $stabilityDetectCommand));
-    
-    $finalVideoOutput = $frameDir . 'final.mp4';
-    $stabilityTransformCommand = [
-        'ffmpeg',
-        '-r 16',
-        '-pattern_type glob',
-        '-i "'.$cleanGlob.'"',
-        '-filter:v "vidstabtransform=smoothing=100:optzoom=0:maxangle=0:input=\''.$stabilityResultOutput.'\', crop=1465:1070:30:10"',
-        '-c:v libx264',
-        '-preset slow',
-        '-crf 22',
-        '-y '.$finalVideoOutput,
-    ];
-    print_r(implode(' ', $stabilityTransformCommand));
-    shell_exec(implode(' ', $stabilityTransformCommand));
-
-    //'-filter:v "vidstabtransform=maxangle=0:input=\''.$transformOutput.'\', crop=1465:1070:0:70"',
-    //print_r(implode(' ', $stabilityTransformCommand));
-    //shell_exec(implode(' ', $stabilityTransformCommand));
-    //shell_exec('rm -rf ' . $frameDir);
-}
-
-// 
-// $videoOutput = $output.'/out.mp4';
-// $videoEncodeCommand = [
-// 	'ffmpeg',
-// 	'-r 16',
-// 	'-pattern_type glob -i "'.$output.'/*.jpeg"',
-// 	'-c:v libx264 '. $videoOutput,
-// ];
-// shell_exec(implode(' ', $videoEncodeCommand));
-// 
-// ffmpeg -pattern_type glob -i "./41-clean/*.jpeg" -filter:v "vidstabtransform=maxangle=0:input='transforms.trf', crop=1465:1070:0:70" -y clip-stabilized.mov
 
 function findSpot($filePath) {
     $threshold = 50;
