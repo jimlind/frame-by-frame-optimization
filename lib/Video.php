@@ -1,8 +1,30 @@
 <?php
 class Video {
-    private static $deleteTempFiles = false;
+    private static $deleteTempFiles = true;
 
     public static function convert(string $outputPath) {
+        self::convertRaw($outputPath);
+        self::convertStabalized($outputPath);
+    }
+
+    private static function convertRaw($outputPath) {
+        $frameGlob = $outputPath . '/*/' . 'c*.jpeg';
+        $finalVideoOutput = $outputPath . '/final-raw.mp4';
+        $rawTransformCommand = [
+            'ffmpeg',
+            '-r 16',
+            '-pattern_type glob',
+            '-i "'.$frameGlob.'"',
+            '-filter:v "crop=1465:1070:30:10"',
+            '-c:v libx264',
+            '-preset slow',
+            '-crf 22',
+            '-y '.$finalVideoOutput,
+        ];
+        shell_exec(implode(' ', $rawTransformCommand));
+    }
+
+    private static function convertStabalized($outputPath) {
         $frameGlob = $outputPath . '/*/' . 'c*.jpeg';
         $stabilitySectionOutput = $outputPath . '/stability.mp4';
         $stabilitySectionCommand = [
@@ -25,7 +47,7 @@ class Video {
         ];
         shell_exec(implode(' ', $stabilityDetectCommand));
         
-        $finalVideoOutput = $outputPath . '/final.mp4';
+        $finalVideoOutput = $outputPath . '/final-stabalized.mp4';
         $stabilityTransformCommand = [
             'ffmpeg',
             '-r 16',
