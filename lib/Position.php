@@ -1,6 +1,6 @@
 <?php
 class Position {
-    protected static $blackThreshold = 660;
+    protected static $blackThreshold = 700;
     protected static $blackPixelQuantity = 10;
     protected static $whiteThreshold = 50;
     protected static $sproketXValue = 400;
@@ -25,21 +25,36 @@ class Position {
 
     protected static function findBlackBorderBottom($imageResource): int {
         $width = imagesx($imageResource) - 1;
+        $blackThreshold = self::$blackThreshold;
+
+        $borderBottom = 0;
+        while ($borderBottom <= 100 || $borderBottom >= 900) {
+            $borderBottom = self::findBlackBorderBottomAtThreshold($imageResource, $width, $blackThreshold);
+            $blackThreshold -= 20;
+
+            if ($blackThreshold < 600) {
+                return 0;
+            } 
+        }
+        return $borderBottom;
+    }
+
+    protected static function findBlackBorderBottomAtThreshold($imageResource, int $width, int $blackThreshold): int {
         $yPosition = 0;
         $colorValueList = [];
 
         $failure = false;
         while (!$failure) {
             $colorValue = self::getAverageColor($imageResource, $width, $yPosition, $failure);
-            if ($colorValue > self::$blackThreshold) {
+            if ($colorValue > $blackThreshold) {
                 // Create a list of all "black pixels"
                 $colorValueList[] = $colorValue;
             }
 
-            if (self::isBlackPixelQuantityMet($colorValueList) && $colorValue < self::$blackThreshold) {
+            if (self::isBlackPixelQuantityMet($colorValueList) && $colorValue < $blackThreshold) {
                 // Get the average pixel difference and calculate an offset
                 // Darker borders get offset more because the relative fuzzy boarder is darker
-                $averagePixelDifference = self::avg($colorValueList) - self::$blackThreshold;
+                $averagePixelDifference = self::avg($colorValueList) - $blackThreshold;
                 $darknessOffset = $averagePixelDifference / 1.5;
                 return $yPosition - $darknessOffset;
             }
