@@ -4,9 +4,6 @@ spl_autoload_register(function ($class_name) {
     include './lib/' . $class_name . '.php';
 });
 
-// IGNORE NOTICES
-error_reporting(E_ALL & ~E_NOTICE);
-
 // Get dir from cli argument
 $inputPath = $argv[1] ?? '';
 if (!is_dir($inputPath . '/cap')) {
