@@ -55,20 +55,20 @@ class Position {
         while (!$failure) {
             $colorValue = self::getAverageColor($imageResource, $width, $yPosition, $failure);
             if ($colorValue > $blackThreshold) {
-                // Create a list of all dark pixels at index 0
+                // Create a list of all dark pixels
                 $colorValueList[self::DARK][$yPosition] = $colorValue;
-            } else {
-                // Create a list of all light pixels at index 1
+            }
+            if ($colorValue < $blackThreshold - 10) { // create a 10 value well
+                // Create a list of all light pixels
                 $colorValueList[self::LIGHT][$yPosition] = $colorValue;
             }
 
             if (self::isPixelQuantityMet($colorValueList)) {
                 // Get the average pixel difference and calculate an offset
-                // Darker borders get offset more because the relative fuzzy boarder is darker
+                // Darker borders get offset more because the relative fuzzy boarder is darker (the darker it is, the larger the y position)
                 $relevantDarkPixels = array_slice($colorValueList[self::DARK], self::$relevantPixelQuantity * -1);
-                $averagePixelDifference = self::avg($relevantDarkPixels) - $blackThreshold;
-                $darknessOffset = $averagePixelDifference / 2;
-                return $yPosition - self::$relevantPixelQuantity - $darknessOffset;
+                $averagePixelDifference = 0;//self::avg($relevantDarkPixels) / 15;
+                return $yPosition - self::$relevantPixelQuantity + $averagePixelDifference;
             }
 
             $yPosition++;
@@ -81,6 +81,15 @@ class Position {
         if (count($colorValueList[self::DARK]) < self::$relevantPixelQuantity || count($colorValueList[self::LIGHT]) < self::$relevantPixelQuantity) {
             return false;
         }
+
+        // Hacky but fast way of getting the last key
+        end($colorValueList[self::DARK]);
+        end($colorValueList[self::LIGHT]);
+        if (key($colorValueList[self::DARK]) > key($colorValueList[self::LIGHT])) {
+            return false;
+        }
+        reset($colorValueList[self::DARK]);
+        reset($colorValueList[self::LIGHT]);
 
         if (!self::relevantKeysAreRelated($colorValueList[self::DARK])) {
             return false;
@@ -99,10 +108,10 @@ class Position {
         $middle = floor(self::$relevantPixelQuantity / 2);
 
         $keys = array_keys(array_slice($list, $offset, $length, true));
-        $absoluteAverageOffset = abs(self::avg($keys) - $keys[$middle]);
+        $averageToEndOffset = end($keys) - self::avg($keys);
 
-        // Here the offset from average has to be less than 4 because that kind of makes sense
-        return ($absoluteAverageOffset < $middle);
+        // Here the offset from average has to be less than length because that kind of makes sense
+        return ($averageToEndOffset < $length);
     }
 
     protected static function findSproketMiddle($imageResource): int {
