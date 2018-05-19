@@ -1,9 +1,12 @@
 <?php
 class Position {
     protected static $blackThreshold = 700;
-    protected static $blackPixelQuantity = 10;
+    protected static $relevantPixelQuantity = 10; // Keep this an even number for easier math later
     protected static $whiteThreshold = 50;
     protected static $sproketXValue = 400;
+
+    const DARK = 'DARK';
+    const LIGHT = 'LIGHT';
 
     public static function getY(string $imageFile): int {
         $imageResource = imagecreatefromjpeg($imageFile);
@@ -16,7 +19,7 @@ class Position {
         $sproketMiddle = self::findSproketMiddle($imageResource);
         if ($sproketMiddle) {
             // print_r('Using sprocket middle.' . PHP_EOL);
-            return $sproketMiddle;
+            return $sproketMiddle - 4;
         }
 
         // print_r('Nothing good detected.' . PHP_EOL);
@@ -25,38 +28,47 @@ class Position {
 
     protected static function findBlackBorderBottom($imageResource): int {
         $width = imagesx($imageResource) - 1;
-        $blackThreshold = self::$blackThreshold;
+        $failure = false;
+        $blackFirstLine = self::getAverageColor($imageResource, $width, 0, $failure) > 600;
+        $yPosition = 0;
+        if ($blackFirstLine) {
+            $yPosition = self::findSproketMiddle($imageResource) - 20;
+        }
 
         $borderBottom = 0;
+        $blackThreshold = self::$blackThreshold;
         while ($borderBottom <= 100 || $borderBottom >= 900) {
-            $borderBottom = self::findBlackBorderBottomAtThreshold($imageResource, $width, $blackThreshold);
+            $borderBottom = self::findBlackBorderBottomAtThreshold($imageResource, $yPosition, $width, $blackThreshold);
             $blackThreshold -= 20;
 
             if ($blackThreshold < 600) {
                 return 0;
-            } 
+            }
         }
         return $borderBottom;
     }
 
-    protected static function findBlackBorderBottomAtThreshold($imageResource, int $width, int $blackThreshold): int {
-        $yPosition = 0;
-        $colorValueList = [];
+    protected static function findBlackBorderBottomAtThreshold($imageResource, int $yPosition, int $width, int $blackThreshold): int {
+        $colorValueList = [self::DARK => [], self::LIGHT => []];
 
         $failure = false;
         while (!$failure) {
             $colorValue = self::getAverageColor($imageResource, $width, $yPosition, $failure);
             if ($colorValue > $blackThreshold) {
-                // Create a list of all "black pixels"
-                $colorValueList[] = $colorValue;
+                // Create a list of all dark pixels at index 0
+                $colorValueList[self::DARK][$yPosition] = $colorValue;
+            } else {
+                // Create a list of all light pixels at index 1
+                $colorValueList[self::LIGHT][$yPosition] = $colorValue;
             }
 
-            if (self::isBlackPixelQuantityMet($colorValueList) && $colorValue < $blackThreshold) {
+            if (self::isPixelQuantityMet($colorValueList)) {
                 // Get the average pixel difference and calculate an offset
                 // Darker borders get offset more because the relative fuzzy boarder is darker
-                $averagePixelDifference = self::avg($colorValueList) - $blackThreshold;
-                $darknessOffset = $averagePixelDifference / 1.5;
-                return $yPosition - $darknessOffset;
+                $relevantDarkPixels = array_slice($colorValueList[self::DARK], self::$relevantPixelQuantity * -1);
+                $averagePixelDifference = self::avg($relevantDarkPixels) - $blackThreshold;
+                $darknessOffset = $averagePixelDifference / 2;
+                return $yPosition - self::$relevantPixelQuantity - $darknessOffset;
             }
 
             $yPosition++;
@@ -65,8 +77,32 @@ class Position {
         return 0;
     }
 
-    protected static function isBlackPixelQuantityMet($colorValueList) {
-        return count($colorValueList) > self::$blackPixelQuantity;
+    protected static function isPixelQuantityMet($colorValueList) {
+        if (count($colorValueList[self::DARK]) < self::$relevantPixelQuantity || count($colorValueList[self::LIGHT]) < self::$relevantPixelQuantity) {
+            return false;
+        }
+
+        if (!self::relevantKeysAreRelated($colorValueList[self::DARK])) {
+            return false;
+        }
+
+        if (!self::relevantKeysAreRelated($colorValueList[self::LIGHT])) {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected static function relevantKeysAreRelated($list) {
+        $offset = -self::$relevantPixelQuantity + 1;
+        $length = self::$relevantPixelQuantity - 1;
+        $middle = floor(self::$relevantPixelQuantity / 2);
+
+        $keys = array_keys(array_slice($list, $offset, $length, true));
+        $absoluteAverageOffset = abs(self::avg($keys) - $keys[$middle]);
+
+        // Here the offset from average has to be less than 4 because that kind of makes sense
+        return ($absoluteAverageOffset < $middle);
     }
 
     protected static function findSproketMiddle($imageResource): int {
@@ -121,13 +157,21 @@ class Position {
     }
 
     protected static function getAverageColor($imageResource, int $x, int $y, bool &$failure): int {
+        // The `imagecolorat` method generates notices and it is easier to ignore them than limit coordinate input
+        // Force error reporting to ignore notices
+        $errorLevel = error_reporting();
+        error_reporting($errorLevel & ~E_NOTICE);
+
         $rgb = imagecolorat($imageResource, $x, $y);
         if(empty($rgb)) {
             $failure = true;
             return 0;
         }
-    
         $colors = imagecolorsforindex($imageResource, $rgb);
+
+        // Return error reporting to previous level
+        error_reporting($errorlevel);
+        
         return (256 * 3) - $colors['red'] - $colors['green'] - $colors['blue'];
     }
 
