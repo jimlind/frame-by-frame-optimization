@@ -45,6 +45,11 @@ class Position {
                 return 0;
             }
         }
+
+        if (!self::middleBorderBottomHasTransition($imageResource, $borderBottom, $width - 200)) {
+            return 0;
+        }
+
         return $borderBottom;
     }
 
@@ -112,6 +117,25 @@ class Position {
 
         // Here the offset from average has to be less than length because that kind of makes sense
         return ($averageToEndOffset < $length);
+    }
+
+    protected static function middleBorderBottomHasTransition($imageResource, $yStartPostion, $xPosition) {
+        $failure = false;
+        $yPosition = $yStartPostion;
+        $yEndPosition = $yStartPostion + 20;
+        $colorValueList = [];
+
+        while (!$failure && $yPosition < $yEndPosition) {
+            $colorValueList[] = getAverageColor($imageResource, $xPosition, $yPosition, $failure);
+            $yPosition++; // Move down
+        }
+
+        $halfCount = count($colorValueList) / 2;
+        $topHalfAverage = self::avg(array_slice($colorValueList, $halfCount * -1));
+        $bottomHalfAverage = self::avg(array_slice($colorValueList, 0, $halfCount));
+
+        $diff = $bottomHalfAverage - $topHalfAverage;
+        return $diff > 25;
     }
 
     protected static function findSproketMiddle($imageResource): int {
