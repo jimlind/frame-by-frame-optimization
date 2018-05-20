@@ -1,6 +1,6 @@
 <?php
 class Position {
-    protected static $blackThreshold = 700;
+    protected static $blackThreshold = 800;
     protected static $relevantPixelQuantity = 10; // Keep this an even number for easier math later
     protected static $whiteThreshold = 50;
     protected static $sproketXValue = 400;
