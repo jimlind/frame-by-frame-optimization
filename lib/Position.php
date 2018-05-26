@@ -9,31 +9,31 @@ class Position {
     const LIGHT = 'LIGHT';
 
     public static function getY(string $imageFile): int {
+        // Load up the image once, it is fast, but still only do it once
         $imageResource = imagecreatefromjpeg($imageFile);
-        $borderBottom = self::findBlackBorderBottom($imageResource);
-        if ($borderBottom > 100 && $borderBottom < 900) {
+        // Look for a middle of the sproket to use later
+        $sproketMiddle = self::findSproketMiddle($imageResource);
+        // Attempt to find the bottom of the top black border frame
+        $borderBottom = self::findBlackBorderBottom($imageResource, $sproketMiddle);
+        
+        $borderToSproketDiff = abs($borderBottom - $sproketMiddle);
+        if ($sproketMiddle && $borderBottom && $borderToSproketDiff < 100) {
             // print_r('Using border bottom.' . PHP_EOL);
             return $borderBottom - 24;
         }
 
-        $sproketMiddle = self::findSproketMiddle($imageResource);
         if ($sproketMiddle) {
             // print_r('Using sprocket middle.' . PHP_EOL);
-            return $sproketMiddle - 4;
+            return $sproketMiddle + 31;
         }
 
         // print_r('Nothing good detected.' . PHP_EOL);
         return 0;
     }
 
-    protected static function findBlackBorderBottom($imageResource): int {
+    protected static function findBlackBorderBottom($imageResource, int $sproketMiddle): int {
+        $yPosition = $sproketMiddle - 30;
         $width = imagesx($imageResource) - 1;
-        $failure = false;
-        $blackFirstLine = self::getAverageColor($imageResource, $width, 0, $failure) > 600;
-        $yPosition = 0;
-        if ($blackFirstLine) {
-            $yPosition = self::findSproketMiddle($imageResource) - 20;
-        }
 
         $borderBottom = 0;
         $blackThreshold = self::$blackThreshold;
