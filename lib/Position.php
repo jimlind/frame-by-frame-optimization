@@ -143,7 +143,7 @@ class Position {
         $y = 0;
         $failure = false;
         while (!$failure) {
-            $colorValue = getAverageColor($imageResource, self::$sproketXValue, $y, $failure);
+            $colorValue = self::getAverageColor($imageResource, self::$sproketXValue, $y, $failure);
             if ($colorValue > self::$whiteThreshold) {
                 break;
             }
@@ -153,7 +153,7 @@ class Position {
         // Starting from a dark enough value, move down 1px at a time until you hit a light enough value
         $topValue = 0;
         while (!$failure) {
-            $colorValue = getAverageColor($imageResource, self::$sproketXValue, $y, $failure);
+            $colorValue = self::getAverageColor($imageResource, self::$sproketXValue, $y, $failure);
             if ($colorValue < self::$whiteThreshold) {
                 $topValue = $y;
                 break;
@@ -167,7 +167,7 @@ class Position {
         // Starting from below where the sprocket should end move up until you hit a light enough value
         $bottomValue = 0;
         while (!$failure) {
-            $colorValue = getAverageColor($imageResource, self::$sproketXValue, $y, $failure);
+            $colorValue = self::getAverageColor($imageResource, self::$sproketXValue, $y, $failure);
             if ($colorValue < self::$whiteThreshold) {
                 $bottomValue = $y;
                 break;
