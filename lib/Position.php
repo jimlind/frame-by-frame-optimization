@@ -39,8 +39,10 @@ class Position {
         $blackThreshold = self::$blackThreshold;
         while ($borderBottom <= 100 || $borderBottom >= 900) {
             $borderBottom = self::findBlackBorderBottomAtThreshold($imageResource, $yPosition, $width, $blackThreshold);
+            // Try a lighter black
             $blackThreshold -= 20;
 
+            // Don't allow anything too light tho. Give up here.
             if ($blackThreshold < 600) {
                 return 0;
             }
@@ -126,7 +128,7 @@ class Position {
         $colorValueList = [];
 
         while (!$failure && $yPosition < $yEndPosition) {
-            $colorValueList[] = getAverageColor($imageResource, $xPosition, $yPosition, $failure);
+            $colorValueList[] = self::getAverageColor($imageResource, $xPosition, $yPosition, $failure);
             $yPosition++; // Move down
         }
 
