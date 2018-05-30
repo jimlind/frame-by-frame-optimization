@@ -74,7 +74,7 @@ class Position {
                 // Get the average pixel difference and calculate an offset
                 // Darker borders get offset more because the relative fuzzy boarder is darker (the darker it is, the larger the y position)
                 $relevantDarkPixels = array_slice($colorValueList[self::DARK], self::$relevantPixelQuantity * -1);
-                $averagePixelDifference = 0;//self::avg($relevantDarkPixels) / 15;
+                $averagePixelDifference = self::avg($relevantDarkPixels) / 15;
                 return $yPosition - self::$relevantPixelQuantity + $averagePixelDifference;
             }
 
