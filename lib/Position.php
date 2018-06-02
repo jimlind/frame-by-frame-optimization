@@ -236,7 +236,7 @@ class Position {
             return ['top' => 0, 'bottom' => 0];
         }
     
-        if ($distance > 399) {
+        if ($distance > 400) {
             // print('ERROR! Detected sproket hole too big.' . PHP_EOL);
             return ['top' => 0, 'bottom' => 0];
         }
