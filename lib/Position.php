@@ -12,18 +12,19 @@ class Position {
         // Load up the image once, it is fast, but still only do it once
         $imageResource = imagecreatefromjpeg($imageFile);
         // Look for a middle of the sproket to use later
-        $sproketMiddle = self::findSproketMiddle($imageResource);
+        $sproketInfo = self::findSproketInfo($imageResource);
         // Attempt to find the bottom of the top black border frame
-        $borderBottom = self::findBlackBorderBottom($imageResource, $sproketMiddle);
+        $borderBottom = self::findBlackBorderBottom($imageResource, $sproketInfo);
         
+        $sproketMiddle = self::avg($sproketInfo);
         $borderToSproketDiff = abs($borderBottom - $sproketMiddle);
-        if ($sproketMiddle && $borderBottom && $borderToSproketDiff < 100) {
-            // print_r('Using border bottom.' . PHP_EOL);
-            return $borderBottom - 24;
+        if ($sproketMiddle && $borderBottom && $borderToSproketDiff < 100 && true) {
+            print_r('Using border bottom.' . PHP_EOL);
+            return $borderBottom - 33;
         }
 
         if ($sproketMiddle) {
-            // print_r('Using sprocket middle.' . PHP_EOL);
+            print_r('Using sprocket middle.' . PHP_EOL);
             return $sproketMiddle + 31;
         }
 
@@ -31,7 +32,53 @@ class Position {
         return 0;
     }
 
-    protected static function findBlackBorderBottom($imageResource, int $sproketMiddle): int {
+    protected static function findBlackBorderBottom($imageResource, array $sproketInfo): int {
+        $failure = false;
+        $colorList = [];
+        $width = imagesx($imageResource) - 1;
+        $yPosition = $sproketInfo['top'];
+        while (!$failure && $yPosition <= $sproketInfo['bottom']) {
+            $colorList[$yPosition] = self::getAverageColor($imageResource, $width, $yPosition, $failure);
+            $yPosition++;
+        }
+        // The first darkest key
+        $darkestValue = max($colorList);
+        $index = array_search($darkestValue, $colorList);
+
+        $lightValues = [];
+        while (self::needsMoreLightValues($lightValues)) {
+            $colorValue = $colorList[$index];
+            if ($colorValue < ($darkestValue - 100)) {
+                $lightValues[$index] = $colorValue;
+            }
+            $index++;
+        }
+        $borderBottom = $index - self::$relevantPixelQuantity;
+
+        if (!self::middleBorderBottomHasTransition($imageResource, $borderBottom - 10, $width - 200)) {
+            return 0;
+        }
+
+        return $borderBottom;
+    }
+
+    protected static function needsMoreLightValues($colorList) {
+        // Need enough values
+        if (count($colorList) < self::$relevantPixelQuantity) {
+            return true;
+        }
+        
+        // Need a string of values grouped together
+        $keySlice = array_slice(array_keys($colorList), self::$relevantPixelQuantity * -1);
+        $keyDiff = max($keySlice) - min($keySlice);
+        if ($keyDiff >= self::$relevantPixelQuantity) {
+            return true;
+        }
+
+        return false;
+    }
+
+    protected static function findBlackBorderBottomDeprecated($imageResource, int $sproketMiddle): int {
         $yPosition = $sproketMiddle - 30;
         $width = imagesx($imageResource) - 1;
 
@@ -140,7 +187,7 @@ class Position {
         return $diff > 25;
     }
 
-    protected static function findSproketMiddle($imageResource): int {
+    protected static function findSproketInfo($imageResource): array {
         // Starting at y=0, move down 1px at a time until you hit a dark enough value
         $y = 0;
         $failure = false;
@@ -188,7 +235,10 @@ class Position {
             return 0;
         }
 
-        return round(($topValue + $bottomValue) / 2);
+        return [
+            'top' => $topValue,
+            'bottom' => $bottomValue,
+        ];
     }
 
     protected static function getAverageColor($imageResource, int $x, int $y, bool &$failure): int {
@@ -198,14 +248,14 @@ class Position {
         error_reporting($errorLevel & ~E_NOTICE);
 
         $rgb = imagecolorat($imageResource, $x, $y);
-        if(empty($rgb)) {
+        if($rgb === false) {
             $failure = true;
             return 0;
         }
         $colors = imagecolorsforindex($imageResource, $rgb);
 
         // Return error reporting to previous level
-        error_reporting($errorlevel);
+        error_reporting($errorLevel);
         
         return (256 * 3) - $colors['red'] - $colors['green'] - $colors['blue'];
     }
