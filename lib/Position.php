@@ -46,13 +46,19 @@ class Position {
         $index = array_search($darkestValue, $colorList);
 
         $lightValues = [];
-        while (self::needsMoreLightValues($lightValues)) {
+        while (self::needsMoreLightValues($lightValues) && $index <= $sproketInfo['bottom']) {
             $colorValue = $colorList[$index];
             if ($colorValue < ($darkestValue - 100)) {
                 $lightValues[$index] = $colorValue;
             }
             $index++;
         }
+
+        // Weren't able to find a good index spot so give up
+        if ($index > $sproketInfo['bottom']) {
+            return 0;
+        }
+
         $borderBottom = $index - self::$relevantPixelQuantity;
 
         if (!self::middleBorderBottomHasTransition($imageResource, $borderBottom - 10, $width - 200)) {
