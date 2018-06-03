@@ -41,6 +41,7 @@ class Position {
             $colorList[$yPosition] = self::getAverageColor($imageResource, $width, $yPosition, $failure);
             $yPosition++;
         }
+
         // The first darkest key
         $darkestValue = max($colorList);
         $index = array_search($darkestValue, $colorList);
@@ -65,7 +66,7 @@ class Position {
             return 0;
         }
 
-        return $borderBottom;
+        return $borderBottom - (($darkestValue - 720) / 4);
     }
 
     protected static function needsMoreLightValues($colorList) {
@@ -223,7 +224,7 @@ class Position {
         $bottomValue = 0;
         while (!$failure) {
             $colorValue = self::getAverageColor($imageResource, self::$sproketXValue, $y, $failure);
-            if ($colorValue < self::$whiteThreshold) {
+            if ($colorValue < self::$whiteThreshold && !$failure) {
                 $bottomValue = $y;
                 break;
             }
