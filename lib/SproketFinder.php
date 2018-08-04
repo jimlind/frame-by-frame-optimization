@@ -38,11 +38,6 @@ class SproketFinder {
             return -1;
         }
 
-        print_r([
-            'top' => $highestDifferencePosition,
-            'bottom' => $lowestDifferencePosition,
-        ]);
-
         $middle = MathHelper::avg([$lowestDifferencePosition, $highestDifferencePosition]);
         return round($middle);
     }
