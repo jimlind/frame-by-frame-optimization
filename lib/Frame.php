@@ -7,6 +7,7 @@ class Frame {
         $imageOutputFolder = $outputPath . '/' . basename($imageFolder);
         Dir::make($imageOutputFolder);
 
+        // Limit the input directory here with '/c0001*.jpeg' or similar
         $imageFileList = glob($imageFolder . '/c*.jpeg');
         foreach ($imageFileList as $imageFile) {
             self::fixDistort($imageFile);

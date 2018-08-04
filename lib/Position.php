@@ -25,7 +25,9 @@ class Position {
 
         if ($sproketMiddle) {
             print_r('Using sprocket middle.' . PHP_EOL);
-            return $sproketMiddle + 31;
+            // This needs to be adjusted based on each film reel.
+            // -3 to 31 have been valid values.
+            return $sproketMiddle + (-3);
         }
 
         // print_r('Nothing good detected.' . PHP_EOL);

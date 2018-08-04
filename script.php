@@ -13,9 +13,10 @@ if (!is_dir($inputPath . '/cap')) {
 $outputPath = $inputPath . '/output';
 Dir::make($outputPath);
 
+// Limit the input directory here with '/cap/000' or similar
 $capWildcardPath = $inputPath . '/cap/*';
 foreach (glob($capWildcardPath) as $imageFolder) {
     Frame::convert($imageFolder, $outputPath);
 }
-Video::convert($outputPath);
+//Video::convert($outputPath);
 exit();
