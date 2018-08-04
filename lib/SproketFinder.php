@@ -1,109 +1,58 @@
 <?php
 class SproketFinder {
-    // This is basically the center of where the sproket appears
+    // This is basically the X center of where the sproket should appear
     const X_VALUE = 400;
+
+    // Target area of Y where the sproket should appear
+    const Y_SPROCKET_TARGET_MAX = 1000;
 
     // This is how far apart we should be looking for a bright to dark change
     const Y_DIFFERENCE_DISTANCE = 12;
 
+    // Sizes we allow
+    const Y_SPROCKET_MAX = 400;
+    const Y_SPROCKET_MIN = 300;
+
     public static function getCenter($imageResource): int {
+        $brightnessList = self::gatherColorBrightnessList($imageResource);
         $highestDifference = $highestDifferencePosition = 0;
         $lowestDifference = $lowestDifferencePosition = 0;
-        for ($y = 0; $y <= 1000; $y++) {
-            $topColorValue = ImageHelper::getColorBrightness($imageResource, self::X_VALUE, $y);
-            $bottomColorValue = ImageHelper::getColorBrightness($imageResource, self::X_VALUE, $y + self::Y_DIFFERENCE_DISTANCE);
-            if ($topColorValue === -1 || $bottomColorValue === -1) {
-                continue;
-            }
 
-            $difference = $topColorValue - $bottomColorValue;
+        foreach ($brightnessList as $key => $value) {
+            $nextValue = $brightnessList[$key + self::Y_DIFFERENCE_DISTANCE] ?? $value;
+            $difference = $value - $nextValue;
             if ($difference > $highestDifference) {
                 $highestDifference = $difference;
-                $highestDifferencePosition = $y + floor(self::Y_DIFFERENCE_DISTANCE / 2);
+                $highestDifferencePosition = $key + floor(self::Y_DIFFERENCE_DISTANCE / 2);
             }
             if ($difference < $lowestDifference) {
                 $lowestDifference = $difference;
-                $lowestDifferencePosition = $y + floor(self::Y_DIFFERENCE_DISTANCE / 2);
+                $lowestDifferencePosition = $key + floor(self::Y_DIFFERENCE_DISTANCE / 2);
             }
         }
 
-        print_r([$highestDifference, $lowestDifference]);
-        print_r([$highestDifferencePosition, $lowestDifferencePosition]);
-        die();
-
-        // Starting from a dark enough value, move down 1px at a time until you hit a light enough value
-        $topValue = 0;
-        while (!$failure) {
-            $colorValue = ImageHelper::getColorBrightness($imageResource, self::X_VALUE, $y, $failure);
-            if ($colorValue < self::$whiteThreshold) {
-                $topValue = $y;
-                break;
-            }
-            $y++; // Move down
+        $ySize = $lowestDifferencePosition - $highestDifferencePosition;
+        if ($ySize > self::Y_SPROCKET_MAX) {
+            return -1;
+        } elseif ($ySize < self::Y_SPROCKET_MIN) {
+            return -1;
         }
 
-        // Move down 400 because most holes are ~330p and we want to be below any normal sprokets
-        $y += 400;
+        print_r([
+            'top' => $highestDifferencePosition,
+            'bottom' => $lowestDifferencePosition,
+        ]);
 
-        // Starting from below where the sprocket should end move up until you hit a light enough value
-        $bottomValue = 0;
-        while (!$failure) {
-            $colorValue = ImageHelper::getColorBrightness($imageResource, self::X_VALUE, $y, $failure);
-            if ($colorValue < self::$whiteThreshold && !$failure) {
-                $bottomValue = $y;
-                break;
-            }
-            $y--; // Move up
-        }
-
-        $distance = $bottomValue - $topValue;
-        if ($distance < 300) {
-            // print('ERROR! Detected sproket hole too small.' . PHP_EOL);
-            return ['top' => 0, 'bottom' => 0];
-        }
-    
-        if ($distance > 400) {
-            // print('ERROR! Detected sproket hole too big.' . PHP_EOL);
-            return ['top' => 0, 'bottom' => 0];
-        }
-
-        return [
-            'top' => $topValue,
-            'bottom' => $bottomValue,
-        ];
+        $middle = MathHelper::avg([$lowestDifferencePosition, $highestDifferencePosition]);
+        return round($middle);
     }
 
-    public static function getBlackAndWhite($imageResource):array {
-        $colorQuantityList = [];
-        for ($y = 0; $y <= 1000; $y++) {
-            $colorValue = ImageHelper::getColorBrightness($imageResource, self::X_VALUE, $y);
-            if (empty($colorQuantityList[$colorValue])) {
-                $colorQuantityList[$colorValue] = 1;
-            } else {
-                $colorQuantityList[$colorValue]++;
-            }
-        }
-        
-        $blackCount = $blackBrightness = 0;
-        $whiteCount = $whiteBrightness = 0;
-
-        foreach ($colorQuantityList as $color => $quantity) {
-            if ($color > ImageHelper::GRAY) {
-                if ($quantity > $blackCount) {
-                    $blackCount = $quantity;
-                    $blackBrightness = $color;
-                }
-            } else {
-                if ($quantity > $whiteCount) {
-                    $whiteCount = $quantity;
-                    $whiteBrightness = $color;
-                }
-            }
+    protected static function gatherColorBrightnessList($imageResource):array {
+        $brightnessList = [];
+        for ($y = 0; $y <= self::Y_SPROCKET_TARGET_MAX; $y++) {
+            $brightnessList[$y] = ImageHelper::getColorBrightness($imageResource, self::X_VALUE, $y);;
         }
 
-        return [
-            'black' => $blackBrightness,
-            'white' => $whiteBrightness,
-        ];
+        return $brightnessList;
     }
 }
