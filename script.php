@@ -1,22 +1,37 @@
 <?php
-// SETUP SIMPLE CLASS AUTOLOADING
+// Setup Simple Class Autoloading
 spl_autoload_register(function ($class_name) {
     include './lib/' . $class_name . '.php';
 });
 
-// Get dir from cli argument
-$inputPath = $argv[1] ?? '';
-if (!is_dir($inputPath . '/cap')) {
-    throw new Exception('Need valid dir as argument');
+// Check CLI argument or give user a prompt
+$inputArg = $argv[1] ?? '';
+if (empty($inputArg)) {
+    print('Enter fully qualified path that has the cap directory: ');
+    $handle = fopen('php://stdin', 'r');
+    $inputArg = fgets($handle);
 }
 
-$outputPath = $inputPath . '/output';
-Dir::make($outputPath);
+// Validate input directory
+$inputPath = realpath($inputArg);
+if (!is_dir($inputPath . '/cap')) {
+    throw new Exception('NEED VALID INPUT DIRECTORY');
+}
 
-// Limit the input directory here with '/cap/000' or similar
-$capWildcardPath = $inputPath . '/cap/*';
-foreach (glob($capWildcardPath) as $imageFolder) {
+// Check CLI argument for a custom output path
+$outputArg = $argv[2] ?? 'output';
+$outputPath = $inputPath . '/' . $outputArg;
+$outputPath = FileSystemHelper::make($outputPath);
+
+// Check CLI argument for file limiters
+$limitArgString = $argv[3] ?? '';
+$limitArgList = array_filter(explode('/', $limitArgString));
+$capPathGlobInput = $inputPath . '/cap/' . ($limitArgList[0] ?? '*');
+
+// Find all neccessary image folders and loop over them
+foreach (glob($capPathGlobInput) as $imageFolder) {
     Frame::convert($imageFolder, $outputPath);
 }
-//Video::convert($outputPath);
+// TODO: When I know this is working perfectly renable video conversion
+// Video::convert($outputPath);
 exit();
