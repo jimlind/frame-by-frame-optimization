@@ -1,21 +1,24 @@
 <?php
 class Frame {
+    // Use this for debugging purposes
     protected static $keepPositioningImage = false;
+
+    // This shouldn't really change, seems to be good
     protected static $xPosition = 550;
 
     public static function convert(string $imageFolder, string $outputPath) {
         $imageOutputFolder = $outputPath . '/' . basename($imageFolder);
-        Dir::make($imageOutputFolder);
+        FileSystemHelper::make($imageOutputFolder);
 
         // Limit the input directory here with '/c0001*.jpeg' or similar
-        $imageFileList = glob($imageFolder . '/c*.jpeg');
+        $imageFileList = glob($imageFolder . '/c0079*.jpeg');
         foreach ($imageFileList as $imageFile) {
             self::fixDistort($imageFile);
 
             $tmpFile = self::$keepPositioningImage ? $imageOutputFolder . '/_' . basename($imageFile) : '';
             $positioningImage = self::writePositioningImage($tmpFile);
 
-            $yPosition = Position::getY($positioningImage);
+            $yPosition = PositionFourCorners::getY($positioningImage);
             if ($yPosition) {
                 $croppedFile = $imageOutputFolder . '/' . basename($imageFile);
                 self::writeCroppedImage($yPosition, $croppedFile);
@@ -60,7 +63,7 @@ class Frame {
         $cmd = [
             'convert',
             'mpc:tmp',
-            '-crop 1200x1000+0+0',
+            //'-crop 1200x1000+0+0',
             '-quality 92',
             $tmpFile
         ];
@@ -80,7 +83,7 @@ class Frame {
             $croppedFile,
         ];
         shell_exec(implode(' ', $cropCommand));
-        print_r(implode(' ', $cropCommand) . PHP_EOL);
+        //print_r(implode(' ', $cropCommand) . PHP_EOL);
 
         echo $croppedFile.' written'.PHP_EOL;
 
