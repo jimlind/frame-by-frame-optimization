@@ -1,21 +1,17 @@
 <?php
 class Frame {
-    // Use this for debugging purposes
-    protected static $keepPositioningImage = false;
-
     // This shouldn't really change, seems to be good
     protected static $xPosition = 550;
 
-    public static function convert(string $imageFolder, string $outputPath) {
+    public static function convert(string $imageFolder, string $fileGlobInput, string $outputPath, bool $keepPositioningImage) {
         $imageOutputFolder = $outputPath . '/' . basename($imageFolder);
         FileSystemHelper::make($imageOutputFolder);
 
-        // Limit the input directory here with '/c0001*.jpeg' or similar
-        $imageFileList = glob($imageFolder . '/c0079*.jpeg');
+        $imageFileList = glob($imageFolder . $fileGlobInput);
         foreach ($imageFileList as $imageFile) {
             self::fixDistort($imageFile);
 
-            $tmpFile = self::$keepPositioningImage ? $imageOutputFolder . '/_' . basename($imageFile) : '';
+            $tmpFile = $keepPositioningImage ? $imageOutputFolder . '/_' . basename($imageFile) : '';
             $positioningImage = self::writePositioningImage($tmpFile);
 
             $yPosition = PositionFourCorners::getY($positioningImage);

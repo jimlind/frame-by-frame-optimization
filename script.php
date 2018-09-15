@@ -1,4 +1,10 @@
 <?php
+// HOW TO USE
+// php script.php ../RED-SANDSK/ 'output-test' '003/c009*' 1
+// >>>> ../RED-SANDSK/  (this is the path that the `cap` dir is in)
+// >>>> 'output-test'   (this is the output dir we are creating next to the `cap`; defaults to 'output')
+// >>>> '003/c009*'     (this is the filtering we are putting on input images; defaults to '*/c*.jpeg')
+// >>>> 1               (this is to keep the positioning image for debugging purposes)
 // Setup Simple Class Autoloading
 spl_autoload_register(function ($class_name) {
     include './lib/' . $class_name . '.php';
@@ -27,10 +33,14 @@ $outputPath = FileSystemHelper::make($outputPath);
 $limitArgString = $argv[3] ?? '';
 $limitArgList = array_filter(explode('/', $limitArgString));
 $capPathGlobInput = $inputPath . '/cap/' . ($limitArgList[0] ?? '*');
+$fileGlobInput = '/' . ($limitArgList[1] ?? 'c*') . '.jpeg';
+
+// Check CLI argument for positing image retention
+$keepPositioningImage = (bool) ($argv[4] ?? false);
 
 // Find all neccessary image folders and loop over them
 foreach (glob($capPathGlobInput) as $imageFolder) {
-    Frame::convert($imageFolder, $outputPath);
+    Frame::convert($imageFolder, $fileGlobInput, $outputPath, $keepPositioningImage);
 }
 // TODO: When I know this is working perfectly renable video conversion
 // Video::convert($outputPath);
