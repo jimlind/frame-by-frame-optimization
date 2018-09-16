@@ -24,16 +24,14 @@ class PositionFourCorners {
     public static function getY(string $imageFile): int {
         // Load up the image once, it is fast, but still only do it once
         $imageResource = imagecreatefromjpeg($imageFile);
-        $sproketInfo = SproketFinder::getCenter($imageResource);
-        // print_r($sproketInfo);
 
+        // Get the complete list of "brightness" values for the left column then process it looking for appropriate brightness changes
         $leftColorValueList = self::gatherColorBrightnessList($imageResource, self::X_LEFT_VALUE);
         $leftPositions = self::processColorValueList($leftColorValueList);
-        //print_r($leftPositions);
 
+        // Get the complete list of "brightness" values for the right column then process it looking for appropriate brightness changes
         $rightColorValueList = self::gatherColorBrightnessList($imageResource, self::X_RIGHT_VALUE);
         $rightPositions = self::processColorValueList($rightColorValueList);
-        //print_r($rightPositions);
 
         $yFromFrame = self::findPositionWithFrame($leftPositions, $rightPositions);
         print_r([$yFromFrame]);
@@ -48,14 +46,45 @@ class PositionFourCorners {
             return $yFromTop;
         }
 
-        $yFromLargestSlope = self::findPositionWithSlope($leftPositions, $rightPositions);
+        $dataFromLargestSlope = self::findPositionWithSlope($leftPositions, $rightPositions);
+        $yFromLargestSlope = $dataFromLargestSlope['yPosition'];
         if (MathHelper::in($yFromLargestSlope, 550, 650)) { // MAGIC VALUES SHOULD BE CALCULATED FROM SPROKET
             print('Y value found with largest slope.' . PHP_EOL);
+            print_r([$dataFromLargestSlope['cornerName']]);
             return $yFromLargestSlope;
         }
 
         print('Y value found from sproket info.' . PHP_EOL);
+        $sproketInfo = SproketFinder::getCenter($imageResource);
         return $sproketInfo + self::SPROCKET_OFFSET;
+    }
+
+    public static function gatherPositionData(string $imageFile): array {
+        $imageResource = imagecreatefromjpeg($imageFile);
+
+        // Get the complete list of "brightness" values for the left column then process it looking for appropriate brightness changes
+        $leftColorValueList = self::gatherColorBrightnessList($imageResource, self::X_LEFT_VALUE);
+        $leftPositions = self::processColorValueList($leftColorValueList);
+
+        // Get the complete list of "brightness" values for the right column then process it looking for appropriate brightness changes
+        $rightColorValueList = self::gatherColorBrightnessList($imageResource, self::X_RIGHT_VALUE);
+        $rightPositions = self::processColorValueList($rightColorValueList);
+
+        $yFromFrame = self::findPositionWithFrame($leftPositions, $rightPositions, true);
+        $yFromTop = self::findPositionWithTop($leftPositions, $rightPositions);
+        $yFromBottom = self::findPositionWithBottom($leftPositions, $rightPositions);
+        if(empty($yFromFrame) || empty($yFromTop) || empty($yFromBottom) || !MathHelper::in($yFromFrame, 550, 650)) {
+            return [];
+        }
+
+        return [
+            'topDiff' => $yFromFrame - $yFromTop,
+            'bottomDiff' => $yFromFrame - $yFromBottom,
+            'topLeftDiff' => $yFromFrame - $leftPositions['top']['position'],
+            'topRightDiff' => $yFromFrame - $rightPositions['top']['position'],
+            'bottomLeftDiff' => $yFromFrame - $leftPositions['bottom']['position'],
+            'bottomRightDiff' =>  $yFromFrame - $rightPositions['bottom']['position'],
+        ];
     }
 
     protected static function gatherColorBrightnessList($imageResource, $x):array {
@@ -70,16 +99,12 @@ class PositionFourCorners {
 
     protected static function processColorValueList(array $colorValueList):array {
         $middle = round(count($colorValueList) / 2);
-
-        $topList = array_slice($colorValueList, 0, $middle - 100, true); // MAGIC VALUE SHOULD BE CONSTANT
-        $topData = self::findLargestSlope($topList, 1);
-
-        $bottomList = array_slice($colorValueList, $middle + 100, null, true); // MAGIC VALUE SHOULD BE CONSTANT
-        $bottomData = self::findLargestSlope($bottomList, -1);
+        $topList = array_slice($colorValueList, 0, $middle, true);
+        $bottomList = array_slice($colorValueList, $middle, null, true); 
 
         return [
-            'top' => $topData ?? 0,
-            'bottom'=> $bottomData ?? 0,
+            'top' => self::findLargestSlope($topList, 1),
+            'bottom'=> self::findLargestSlope($bottomList, -1),
         ];
     }
 
@@ -110,19 +135,13 @@ class PositionFourCorners {
             }
         }
 
-        // Maximum difference isn't enough... ignore it.
-        if ($maxDifference < 80) { // MAGIC VALUE SHOULD BE CONSTANT
-            $maxDifferencePosition = 0;
-            $maxDifference = 0;
-        }
-
         return [
             'position' => $maxDifferencePosition,
             'slope' => $maxDifference,
         ];
     }
 
-    protected static function findPositionWithFrame($leftPositions, $rightPositions): int {
+    protected static function findPositionWithFrame($leftPositions, $rightPositions, $forceFourCorners = false): int {
         $validTopPositions = [];
 
         $leftHeight = $leftPositions['bottom']['position'] - $leftPositions['top']['position'];
@@ -145,6 +164,10 @@ class PositionFourCorners {
             $validTopPositions[] = $leftPositions['top']['position'];
         }
 
+        if ($forceFourCorners && count($validTopPositions) !== 4) {
+            return 0;
+        }
+
         return round(MathHelper::avg($validTopPositions));
     }
 
@@ -159,28 +182,47 @@ class PositionFourCorners {
         return round(MathHelper::avg([$rightTop, $leftTop]));
     }
 
-    protected static function findPositionWithSlope($leftPositions, $rightPositions): int {
+    protected static function findPositionWithBottom($leftPositions, $rightPositions): int {
+        $rightBottom = $rightPositions['bottom']['position'];
+        $leftBottom = $leftPositions['bottom']['position'];
+
+        if (abs($rightBottom - $leftBottom) > 10) { // MAGIC VALUE SHOULD BE CONSTANT
+            return 0;
+        }
+
+        return round(MathHelper::avg([$rightBottom, $leftBottom]));
+    }
+
+    protected static function findPositionWithSlope($leftPositions, $rightPositions): array {
         $greatestSlope = $yPosition = 0;
+        $cornerName = '';
 
         if ($leftPositions['top']['slope'] > $greatestSlope) {
             $greatestSlope = $leftPositions['top']['slope'];
             $yPosition = $leftPositions['top']['position'];
+            $cornerName = "top left";
         }
 
         if ($rightPositions['top']['slope'] > $greatestSlope) {
             $greatestSlope = $rightPositions['top']['slope'];
             $yPosition = $rightPositions['top']['position'];
+            $cornerName = "top right";
         }
 
         if ($leftPositions['bottom']['slope'] > $greatestSlope) {
             $greatestSlope = $leftPositions['bottom']['slope'];
             $yPosition = $leftPositions['bottom']['position'] - 980; // MAGIC VALUE SHOULD BE CONSTANT
+            $cornerName = "bottom left";
         }
 
         if ($rightPositions['bottom']['slope'] > $greatestSlope) {
             $yPosition = $rightPositions['bottom']['position'] - 980; // MAGIC VALUE SHOULD BE CONSTANT
+            $cornerName = "bottom right";
         }
 
-        return $yPosition;
+        return [
+            'yPosition' => $yPosition,
+            'cornerName' => $cornerName,
+        ];
     }
 }
