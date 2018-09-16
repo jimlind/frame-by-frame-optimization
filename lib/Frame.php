@@ -24,6 +24,42 @@ class Frame {
         }
     }
 
+    public static function look(string $imageFolder, string $fileGlobInput) {
+        $diffData = [
+            'top' => [],
+            'bottom' => [],
+            'topLeft' => [],
+            'topRight' => [],
+            'bottomLeft' => [],
+            'bottomRight' => [],
+        ];
+
+        $imageFileList = glob($imageFolder . $fileGlobInput);
+        foreach ($imageFileList as $imageFile) {
+            if (rand(0, 20) === 0) {
+                self::fixDistort($imageFile);
+                $positioningImage = self::writePositioningImage();
+                $positionData = PositionFourCorners::gatherPositionData($positioningImage);
+                if (empty($positionData)) {
+                    print('0');
+                    continue;
+                }
+                print('1');
+
+                $diffData['top'][] = $positionData['topDiff'];
+                $diffData['bottom'][] = $positionData['bottomDiff'];
+                $diffData['topLeft'][] = $positionData['topLeftDiff'];
+                $diffData['topRight'][] = $positionData['topRightDiff'];
+                $diffData['bottomLeft'][] = $positionData['bottomLeftDiff'];
+                $diffData['bottomRight'][] = $positionData['bottomRightDiff'];
+            }
+        }
+
+        print(PHP_EOL . 'A' . count($diffData['top']) . PHP_EOL);
+
+        return $diffData;
+    }
+
     protected static function fixDistort(string $imageFile) {
         // Setup the points to use for distortion writing
         $perspectivePoints = [
@@ -49,7 +85,7 @@ class Frame {
         shell_exec(implode(' ', $fixDistortCommand));
     }
 
-    protected static function writePositioningImage(string $tmpFile = null) {
+    protected static function writePositioningImage(string $tmpFile = '') {
         // If nothing was supplied.. use a tmp file
         if (empty($tmpFile)) {
             $tmpFile = sys_get_temp_dir().'/film-sprocket-hole.jpg';
