@@ -26,12 +26,9 @@ class Frame {
 
     public static function look(string $imageFolder, string $fileGlobInput) {
         $diffData = [
+        	'sproket' => [],
             'top' => [],
             'bottom' => [],
-            'topLeft' => [],
-            'topRight' => [],
-            'bottomLeft' => [],
-            'bottomRight' => [],
         ];
 
         $imageFileList = glob($imageFolder . $fileGlobInput);
@@ -41,21 +38,14 @@ class Frame {
                 $positioningImage = self::writePositioningImage();
                 $positionData = PositionFourCorners::gatherPositionData($positioningImage);
                 if (empty($positionData)) {
-                    print('0');
                     continue;
                 }
-                print('1');
 
+				$diffData['sproket'][] = $positionData['sproketDiff'];
                 $diffData['top'][] = $positionData['topDiff'];
                 $diffData['bottom'][] = $positionData['bottomDiff'];
-                $diffData['topLeft'][] = $positionData['topLeftDiff'];
-                $diffData['topRight'][] = $positionData['topRightDiff'];
-                $diffData['bottomLeft'][] = $positionData['bottomLeftDiff'];
-                $diffData['bottomRight'][] = $positionData['bottomRightDiff'];
             }
         }
-
-        print(PHP_EOL . 'A' . count($diffData['top']) . PHP_EOL);
 
         return $diffData;
     }
