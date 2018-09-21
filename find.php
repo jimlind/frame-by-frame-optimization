@@ -31,5 +31,8 @@ foreach (glob($inputPath . '/cap/*') as $imageFolder) {
     }
 }
 
-print_r($allResults);
+print_r('Sproket: ' . round(MathHelper::avg($allResults['sproket'])) . PHP_EOL);
+print_r('Top: ' . round(MathHelper::avg($allResults['top'])) . PHP_EOL);
+print_r('Bottom: ' . round(MathHelper::avg($allResults['bottom'])) . PHP_EOL);
+
 exit();
