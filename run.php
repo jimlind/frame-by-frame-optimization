@@ -25,12 +25,12 @@ if (!is_dir($capturePath)) {
 
 // Check CLI argument for a custom output path
 $outputDir = $argv[2] ?? 'output';
-$outputPath = $inputPath . '/' . $outputDir;
+$outputPath = $inputPath . DIRECTORY_SEPARATOR . $outputDir;
 
 // Check CLI argument for file limiters
 $limitArgString = $argv[3] ?? '';
 $limitArgList = array_filter(explode('/', $limitArgString));
-$capPathGlobInput = $capturePath . '/' . ($limitArgList[0] ?? '*');
+$capPathGlobInput = $capturePath . DIRECTORY_SEPARATOR . ($limitArgList[0] ?? '*');
 $fileGlobInput = '/' . ($limitArgList[1] ?? 'c*') . '.jpeg';
 
 // Check CLI argument for positing image retention
@@ -38,7 +38,7 @@ $keepPositioningImage = (bool) ($argv[4] ?? false);
 
 // Find all neccessary image folders and loop over them
 foreach (glob($capPathGlobInput) as $imageInputPath) {
-    $imageOutputPath = $outputPath . '/' . basename($imageInputPath);
+    $imageOutputPath = $outputPath . DIRECTORY_SEPARATOR . basename($imageInputPath);
 
     $imageFolderAction = new ImageFolderAction($imageInputPath, $imageOutputPath);
     $imageFolderAction->fileGlobInput = $fileGlobInput;
