@@ -1,12 +1,9 @@
 <?php
+include_once './lib/Autoloader.php';
+
 // HOW TO USE
 // php find.php ../RED-SANDSK/
 // >>>> ../RED-SANDSK/  (this is the path that the `cap` dir is in)
-
-// Setup Simple Class Autoloading
-spl_autoload_register(function ($class_name) {
-    include './lib/' . $class_name . '.php';
-});
 
 // Check CLI argument or give user a prompt
 $inputArg = $argv[1] ?? '';
@@ -21,6 +18,13 @@ $inputPath = realpath($inputArg);
 if (!is_dir($inputPath . '/cap')) {
     throw new Exception('NEED VALID INPUT DIRECTORY');
 }
+
+$outputPath = $inputPath . '/outputX';
+foreach (glob($inputPath . '/cap/*') as $imageFolder) {
+    Frame::borderFinder($imageFolder, '/c*.jpeg', $outputPath);
+}
+
+exit();
 
 // Find all neccessary image folders and loop over them
 $allResults = [];
