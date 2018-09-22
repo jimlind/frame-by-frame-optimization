@@ -1,4 +1,7 @@
 <?php
+
+use \Locators\DarkBorderLocator;
+
 class ImageAction {
 
     protected $filePath = '';
@@ -15,6 +18,10 @@ class ImageAction {
         $centerColumn = $dataModel->getCenterColumn();
         $leftColumn = $dataModel->getLeftColumn();
         $rightColumn = $dataModel->getRightColumn();
+
+        $locator = new DarkBorderLocator($dataModel);
+        $data = $locator->locate();
+        print_r($data);
     }
 
     protected function fixDistort(string $imageFile) : string {
