@@ -1,4 +1,6 @@
 <?php
+namespace Helpers;
+
 class MathHelper {
     /**
      * Average value in an array
