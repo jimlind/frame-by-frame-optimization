@@ -1,6 +1,9 @@
 <?php
 class FileSystemHelper {
-    public static function make(string $path) : string {
+    /**
+     * Make Directory
+     */
+    public static function md(string $path) : string {
         if (is_dir($path) === false) {
             mkdir($path);
         }
