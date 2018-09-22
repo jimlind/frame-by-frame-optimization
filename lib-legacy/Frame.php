@@ -50,6 +50,21 @@ class Frame {
         return $diffData;
     }
 
+    public static function borderFinder(string $imageFolder, string $fileGlobInput, string $outputPath) {
+        $imageOutputFolder = $outputPath . '/' . basename($imageFolder);
+
+        $imageFileList = glob($imageFolder . $fileGlobInput);
+        foreach ($imageFileList as $imageFile) {
+            print($imageFile . PHP_EOL);
+            self::fixDistort($imageFile);
+            $positioningImage = self::writePositioningImage();
+            $data = PositionFourCorners::getBorderData($positioningImage);
+            
+            $croppedFile = $imageOutputFolder . '/' . basename($imageFile);
+            self::writeCroppedImage($data['top'], $croppedFile);
+        }
+    }
+
     protected static function fixDistort(string $imageFile) {
         // Setup the points to use for distortion writing
         $perspectivePoints = [
