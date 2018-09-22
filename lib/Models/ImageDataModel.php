@@ -31,7 +31,7 @@ class ImageDataModel {
 
     public function getLeftColumn(): array {
         if (empty($this->leftColumn)) {
-            return $this->leftColumn = ImageHelper::gatherColorBrightnessList($this->resource, self::X_LEFT_VALUE);
+            $this->leftColumn = ImageHelper::gatherColorBrightnessList($this->resource, self::X_LEFT_VALUE);
         }
 
         return $this->leftColumn;
@@ -39,7 +39,7 @@ class ImageDataModel {
 
     public function getRightColumn(): array {
         if (empty($this->rightColumn)) {
-            return $this->rightColumn = ImageHelper::gatherColorBrightnessList($this->resource, self::X_RIGHT_VALUE);
+            $this->rightColumn = ImageHelper::gatherColorBrightnessList($this->resource, self::X_RIGHT_VALUE);
         }
 
         return $this->rightColumn;
