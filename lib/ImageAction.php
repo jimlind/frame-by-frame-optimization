@@ -2,12 +2,12 @@
 
 use \Helpers\FileSystemHelper;
 use \Locators\DarkBorderLocator;
-
+use \Locators\SproketLocator;
 
 class ImageAction {
 
     // This shouldn't really change, seems to be good
-    const XPOSITION = 550;
+    const X_POSITION = 550;
 
     protected $inputPath = '';
 
@@ -26,9 +26,15 @@ class ImageAction {
         $locator = new DarkBorderLocator($dataModel);
         $data = $locator->locate();
 
+        $sproketLocator = new SproketLocator($dataModel);
+        $sproketValue = $sproketLocator->locate();
+
         $this->writeCroppedImage($cacheKey, $data['top'], $this->outputPath);
 
-        print_r($data['top']);
+        print_r([
+            'border top' => $data['top'],
+            'sproket center' => $sproketValue,
+        ]);
     }
 
     protected function fixDistort(string $imageFile) : string {
@@ -84,7 +90,7 @@ class ImageAction {
         $cropCommand = [
             'convert',
             $cacheKey,
-            '-crop 1500x1100+' . self::XPOSITION . '+' . $yPosition,
+            '-crop 1500x1100+' . self::X_POSITION . '+' . $yPosition,
             '-sharpen 0x2',
             '-quality 100',
             $croppedFile,
