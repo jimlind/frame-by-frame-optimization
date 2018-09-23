@@ -1,27 +1,34 @@
 <?php
 
+use \Helpers\FileSystemHelper;
 use \Locators\DarkBorderLocator;
+
 
 class ImageAction {
 
-    protected $filePath = '';
+    // This shouldn't really change, seems to be good
+    const XPOSITION = 550;
 
-    public function __construct($filePath) {
-        $this->filePath = $filePath;
+    protected $inputPath = '';
+
+    protected $outputPath = '';
+
+    public function __construct(string $inputPath, string $outputPath) {
+        $this->inputPath = $inputPath;
+        $this->outputPath = $outputPath;
     }
 
     public function run() {
-        $cacheKey = $this->fixDistort($this->filePath);
+        $cacheKey = $this->fixDistort($this->inputPath);
         $tmpFile = $this->writePositioningImage($cacheKey);
         
         $dataModel = new \Models\ImageDataModel($tmpFile);
-        $centerColumn = $dataModel->getCenterColumn();
-        $leftColumn = $dataModel->getLeftColumn();
-        $rightColumn = $dataModel->getRightColumn();
-
         $locator = new DarkBorderLocator($dataModel);
         $data = $locator->locate();
-        print_r($data);
+
+        $this->writeCroppedImage($cacheKey, $data['top'], $this->outputPath);
+
+        print_r($data['top']);
     }
 
     protected function fixDistort(string $imageFile) : string {
@@ -68,5 +75,24 @@ class ImageAction {
         shell_exec(implode(' ', $cmd));
 
         return $tmpFile;
+    }
+
+    protected function writeCroppedImage(string $cacheKey, int $yPosition, string $croppedFile) {
+        FileSystemHelper::md(dirname($croppedFile));
+        
+        // Finalize the image and write to disk
+        $cropCommand = [
+            'convert',
+            $cacheKey,
+            '-crop 1500x1100+' . self::XPOSITION . '+' . $yPosition,
+            '-sharpen 0x2',
+            '-quality 100',
+            $croppedFile,
+        ];
+        shell_exec(implode(' ', $cropCommand));
+        //print_r(implode(' ', $cropCommand) . PHP_EOL);
+
+        echo $croppedFile.' written'.PHP_EOL;
+
     }
 }

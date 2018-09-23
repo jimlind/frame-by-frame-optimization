@@ -17,7 +17,9 @@ class ImageFolderAction {
     public function run() {        
         $imageFileList = glob($this->inputPath . $this->fileGlobInput);
         foreach ($imageFileList as $imageFile) {
-            $imageAction = new ImageAction($imageFile);
+            $outputFile = $this->outputPath . DIRECTORY_SEPARATOR . basename($imageFile);
+
+            $imageAction = new ImageAction($imageFile, $outputFile);
             $imageAction->run();
         }
     }
