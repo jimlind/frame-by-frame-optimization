@@ -3,6 +3,7 @@
 use \Helpers\FileSystemHelper;
 use \Locators\DarkBorderLocator;
 use \Locators\SproketLocator;
+use \Locators\TopSlopeLocator;
 
 class ImageAction {
 
@@ -29,12 +30,15 @@ class ImageAction {
         $sproketLocator = new SproketLocator($dataModel);
         $sproketValue = $sproketLocator->locate();
 
-        $this->writeCroppedImage($cacheKey, $data['top'], $this->outputPath);
+        $slopeLocator = new TopSlopeLocator($dataModel, $data['top']);
+        $index = $slopeValue = $slopeLocator->locate();
 
-        print_r([
-            'border top' => $data['top'],
-            'sproket center' => $sproketValue,
-        ]);
+        $this->writeCroppedImage($cacheKey, $index, $this->outputPath);
+
+        // print_r([
+        //     'border top' => $data['top'],
+        //     'sproket center' => $sproketValue,
+        // ]);
     }
 
     protected function fixDistort(string $imageFile) : string {
