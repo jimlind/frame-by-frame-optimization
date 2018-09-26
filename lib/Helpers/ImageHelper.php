@@ -10,13 +10,15 @@ class ImageHelper {
         $height = imagesy($imageResource);
         $brightnessList = [];
         for ($y = 0; $y <= $height; $y++) {
-            $brightnessList[$y] = self::getSpotColorBrightness($imageResource, $x, $y);
+            $brightnessList[$y] = self::getColorBrightness($imageResource, $x, $y);
         }
 
         return $brightnessList;
     }
 
     /**
+     * NOT ACTUALLY USED, BUT NOT READY TO DELETE YET
+     * 
      * Get a value representing the nine pixels surrounding a single spot
      * Not actually color brightness but more white is a lower value than more black
      */
