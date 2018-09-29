@@ -15,6 +15,21 @@ class MathHelper {
     }
 
     /**
+     * Median value in an array
+     */
+    public static function median(array $list, bool $round = false) {
+        $c = count($list);
+        $m = floor($c / 2);
+        sort($list, SORT_NUMERIC);
+        $r = $list[$m];
+        if ($c % 2 == 0) {
+          $r = ($r + $list[$m - 1]) / 2;
+        }
+
+        return $round ? round($r) : $r;
+    }
+
+    /**
      * Is value between two other values
      */
     public static function between($value, $min, $max){
