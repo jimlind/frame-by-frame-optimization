@@ -17,7 +17,7 @@ class SproketLocator {
 
     public function locate(): int {
         $originalColumn = $column = array_slice($this->dataModel->getSproketColumn(), 0, 1000, true);
-        asort($column);
+        arsort($column);
         $lightValues = array_slice($column, 20, 260, true);
         $sproketMax = max($lightValues);
 
