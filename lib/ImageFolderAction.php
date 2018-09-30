@@ -20,6 +20,7 @@ class ImageFolderAction {
             $outputFile = $this->outputPath . DIRECTORY_SEPARATOR . basename($imageFile);
 
             $imageAction = new ImageAction($imageFile, $outputFile);
+            $imageAction->keepPositioningImage = $this->keepPositioningImage;
             $imageAction->run();
         }
     }
