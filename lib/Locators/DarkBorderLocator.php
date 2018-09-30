@@ -66,25 +66,26 @@ class DarkBorderLocator {
         $min = min($valueList);
         while ($min < 20) {
             $filteredList = array_filter($valueList, function ($a) use ($min) { return ($a <= $min);}); 
-            $newList = $keyList = [];
+            $newList = $newListCount = $keyList = [];
             $prevKey = 0;
             foreach ($filteredList as $key => $value) {
                 if ($key === $prevKey + 1) {
                     $keyList[] = $key;
                 } else {
                     $newList[] = $keyList;
+                    $newListCount[] = count($keyList);
                     $keyList = [$key];
                 }
                 $prevKey = $key;
             }
 
-            foreach ($newList as $subList) {
-                if (count($subList) > 20) {
-                    return MathHelper::average($subList);
-                }
+            $maxCount = max($newListCount);
+            if ($maxCount > 20) {
+                $index = array_search($maxCount, $newListCount);
+                return MathHelper::average($newList[$index]);
             }
 
-            $min++;
+            $min += 0.1;
         }
 
         return 0;
