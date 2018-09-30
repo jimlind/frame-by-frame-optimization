@@ -18,6 +18,10 @@ class MathHelper {
      * Median value in an array
      */
     public static function median(array $list, bool $round = false) {
+        if (empty($list)) {
+            return 0;
+        }
+
         $c = count($list);
         $m = floor($c / 2);
         sort($list, SORT_NUMERIC);
