@@ -8,20 +8,24 @@ class DarkBorderLocator {
 
     protected $dataModel = null;
 
-    public function __construct(ImageDataModel $dataModel) {
+    protected $sproketY = 0;
+
+    public function __construct(ImageDataModel $dataModel, int $sproketY) {
         $this->dataModel = $dataModel;
+        $this->sproketY = $sproketY;
     }
 
     public function locate() {
         $brightnessList = $this->dataModel->getCenterColumn();
         $middleY = round(count($brightnessList) / 2);
 
-        $topHalfList = array_slice($brightnessList, 1, $middleY - 1, true);
+        $topHalfList = array_slice($brightnessList, $this->sproketY - 100, 200, true);
+        // TODO: FIND A WAY TO APPROXIMATE THE BOTTOM HALF
         $bottomHalfList = array_slice($brightnessList, $middleY + 1, -1, true);
         
         return [
             'top' => $this->findViablePosition($topHalfList),
-            'bottom' => $this->findViablePosition($bottomHalfList),
+            'bottom' => 0, // TODO: SOMETHING HERE $this->findViablePosition($bottomHalfList),
         ];
     }
 
@@ -40,7 +44,7 @@ class DarkBorderLocator {
     }
 
     protected function findDarkestBlock(array $valueList): int {
-        arsort($valueList);
+        asort($valueList);
         $valueSlice = array_slice($valueList, 0, 60, true);
         ksort($valueSlice);
         $valueSlice = array_slice($valueSlice, 10, -10, true);
@@ -51,17 +55,17 @@ class DarkBorderLocator {
         end($valueSlice);
         $lastLocation = key($valueSlice);
 
-        if ($sliceLength / ($lastLocation - $firstLocation) > 0.5) {
-            return MathHelper::average(array_keys($valueSlice), true);
+        if ($sliceLength / ($lastLocation - $firstLocation) <= 0.5) {
+            return 0;
         }
 
-        return 0;
+        return MathHelper::average(array_keys($valueSlice), true);
     }
 
     protected function findLargeDarkBlock(array $valueList): int {
-        $max = max($valueList);
-        while ($max > 0) {
-            $filteredList = array_filter($valueList, function ($a) use ($max) { return ($a >= $max);}); 
+        $min = min($valueList);
+        while ($min < 20) {
+            $filteredList = array_filter($valueList, function ($a) use ($min) { return ($a <= $min);}); 
             $newList = $keyList = [];
             $prevKey = 0;
             foreach ($filteredList as $key => $value) {
@@ -80,7 +84,7 @@ class DarkBorderLocator {
                 }
             }
 
-            $max--;
+            $min++;
         }
 
         return 0;
