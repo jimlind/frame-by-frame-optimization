@@ -2,12 +2,18 @@
 namespace Models;
 
 use \Helpers\ImageHelper;
+use \Helpers\MathHelper;
 
 class ImageDataModel {
     // This is basically the X of a left-ish and right-ish parts of the frame are.
     const X_SPROKET_VALUE = 400;
     const X_LEFT_VALUE = 700;
     const X_RIGHT_VALUE = 1800;
+
+    public $ySprocketValue = 0;
+
+    public $yDarkTopValue = 0;
+    public $yDarkBottomValue = 0;
 
     protected $resource = null;
 
@@ -18,6 +24,8 @@ class ImageDataModel {
     protected $rightColumn = [];
 
     protected $sproketColumn = [];
+
+    protected $compositeColumn = [];
     
     public function __construct(string $imageFilePath) {
         $this->resource = imagecreatefromjpeg($imageFilePath);
@@ -54,5 +62,14 @@ class ImageDataModel {
         }
 
         return $this->sproketColumn;
+    }
+
+    public function getCompositeColumnRange(): array {
+        $b = [];
+        foreach (range($this->yDarkTopValue, $this->yDarkTopValue + 100) as $y) {
+            $b[$y] = ImageHelper::getRowAverageBrightness($this->resource, self::X_LEFT_VALUE, self::X_RIGHT_VALUE, $y);
+        }
+        
+        return $b;
     }
 }

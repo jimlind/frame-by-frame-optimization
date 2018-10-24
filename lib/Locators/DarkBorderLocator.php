@@ -10,9 +10,9 @@ class DarkBorderLocator {
 
     protected $sproketY = 0;
 
-    public function __construct(ImageDataModel $dataModel, int $sproketY) {
+    public function __construct(ImageDataModel $dataModel) {
         $this->dataModel = $dataModel;
-        $this->sproketY = $sproketY;
+        $this->sproketY = $dataModel->ySprocketValue;
     }
 
     public function locate() {
@@ -20,12 +20,11 @@ class DarkBorderLocator {
         $middleY = round(count($brightnessList) / 2);
 
         $topHalfList = array_slice($brightnessList, $this->sproketY - 100, 200, true);
-        // TODO: FIND A WAY TO APPROXIMATE THE BOTTOM HALF
-        $bottomHalfList = array_slice($brightnessList, $middleY + 1, -1, true);
+        $bottomHalfList = array_slice($brightnessList, $this->sproketY + 1000, 200, true);
         
         return [
             'top' => $this->findViablePosition($topHalfList),
-            'bottom' => 0, // TODO: SOMETHING HERE $this->findViablePosition($bottomHalfList),
+            'bottom' => $this->findViablePosition($bottomHalfList),
         ];
     }
 

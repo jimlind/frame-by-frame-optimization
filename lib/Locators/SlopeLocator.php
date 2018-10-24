@@ -15,9 +15,9 @@ class SlopeLocator {
 
     protected $direction = 0;
 
-    public function __construct(ImageDataModel $dataModel, int $startingPosition) {
+    public function __construct(ImageDataModel $dataModel) {
         $this->dataModel = $dataModel;
-        $this->startingPosition = $startingPosition;
+        $this->startingPosition = $dataModel->yDarkTopValue;
     }
 
     protected function findLargestSlope(array $list, int $direction):array {

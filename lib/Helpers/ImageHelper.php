@@ -17,6 +17,38 @@ class ImageHelper {
     }
 
     /**
+     * Get a list of values representing a slice of a column
+     * Not actually color brightness but more white is a lower value than more black
+     */
+    public static function gatherColorBrightnessListRange($imageResource, int $x, int $y, int $length): float {
+        $brightnessList = [];
+        $brightnessLineList = [];
+
+        //for ($i = 0; $i <= $length; $i++) {
+            //$brightnessList[$y + $i] = self::getColorBrightness($imageResource, $x, $y + $i);
+            $a = [];
+            foreach (range($x, $x+1100) as $b) {
+                $a[] = self::getColorBrightness($imageResource, $b, $y);
+            }
+            return MathHelper::average($a);
+
+            $brightnessLineList[$y] = MathHelper::average($a);
+        //}
+
+        print_r(['aaa', $length, $x, $brightnessList, $brightnessLineList]);
+        return $brightnessList;
+    }
+
+    public static function getRowAverageBrightness($imageResource, int $xLeft, int $xRight, int $y): float {
+        $brightnessList = [];
+        foreach (range($xLeft, $xRight) as $x) {
+            $brightnessList[] = self::getColorBrightness($imageResource, $x, $y);
+        }
+
+        return MathHelper::average($brightnessList);
+    }
+
+    /**
      * NOT ACTUALLY USED, BUT NOT READY TO DELETE YET
      * 
      * Get a value representing the nine pixels surrounding a single spot
