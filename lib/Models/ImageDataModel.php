@@ -64,12 +64,12 @@ class ImageDataModel {
         return $this->sproketColumn;
     }
 
-    public function getCompositeColumnRange(): array {
-        $b = [];
+    public function getCompositeColumn(): array {
+        $valueList = [];
         foreach (range($this->yDarkTopValue, $this->yDarkTopValue + 100) as $y) {
-            $b[$y] = ImageHelper::getRowAverageBrightness($this->resource, self::X_LEFT_VALUE, self::X_RIGHT_VALUE, $y);
+            $valueList[$y] = ImageHelper::getRowAverageBrightness($this->resource, self::X_LEFT_VALUE, self::X_RIGHT_VALUE, $y);
         }
-        
-        return $b;
+
+        return $valueList;
     }
 }
