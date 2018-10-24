@@ -8,16 +8,47 @@ class TopSlopeLocator extends SlopeLocator{
 
     protected $direction = 1;
 
-    public function locate() {
+    public function locate():int {
+        $f = $this->dataModel->getCompositeColumnRange();
+        $fa = MathHelper::average(array_slice($f, 0, 10));
+
+        $y = 0;
+        $highFound = 0;
+        foreach($f as $j => $k) {
+            if ($k > $fa * 2) {
+                if ($highFound === 0) {
+                    $y = $j;
+                }
+                $highFound++;
+                if ($highFound === 10) {
+                    break;
+                }
+            } else {
+                $y = 0;
+                $highFound = 0;
+            }
+        }
+
+        return $y;
+    }
+
+    public function more_test_stuff() {
         $a = $this->x($this->dataModel->getLeftColumn());
         $b = $this->x($this->dataModel->getCenterColumn());
         $c = $this->x($this->dataModel->getRightColumn());
+
+        // THIS IS TEST METHOD GARBAGE
+        $f = $this->dataModel->gatherColorBrightnessListSlice();
+        $pf = array_slice($f, 0, 10);
+        print_r([MathHelper::average($pf), $f]);
 
         $d = array_filter([$a, $b, $c]);
         //print_r([$a,$b,$c]);
 
         return MathHelper::median($d);
     }
+
+
 
     public function x($list) {
         $pa = array_slice($list, $this->startingPosition, 10);
