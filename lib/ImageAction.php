@@ -10,6 +10,8 @@ class ImageAction {
     // This shouldn't really change, seems to be good
     const X_POSITION = 550;
 
+    public $keepPositioningImage = false;
+
     protected $inputPath = '';
 
     protected $outputPath = '';
@@ -21,17 +23,35 @@ class ImageAction {
 
     public function run() {
         $cacheKey = $this->fixDistort($this->inputPath);
-        $tmpFile = $this->writePositioningImage($cacheKey);
+
+        $tmpFilePath = '';
+        if ($this->keepPositioningImage) {
+            $outputDir = dirname($this->outputPath);
+            FileSystemHelper::md($outputDir);
+            $tmpFilePath = implode([
+                $outputDir,
+                DIRECTORY_SEPARATOR,
+                '_',
+                basename($this->outputPath)
+            ]);
+        }
+        $tmpFile = $this->writePositioningImage($cacheKey, $tmpFilePath);
         
         $dataModel = new \Models\ImageDataModel($tmpFile);
-        $locator = new DarkBorderLocator($dataModel);
-        $data = $locator->locate();
 
         $sproketLocator = new SproketLocator($dataModel);
-        $sproketValue = $sproketLocator->locate();
+        $dataModel->ySprocketValue = $sproketLocator->locate();
 
-        $slopeLocator = new TopSlopeLocator($dataModel, $data['top']);
+        $darkBorderLocator = new DarkBorderLocator($dataModel);
+        $darkBorderData = $darkBorderLocator->locate();
+        $dataModel->yDarkTopValue = $darkBorderData['top'];
+        $dataModel->yDarkBottomValue = $darkBorderData['bottom'];
+
+        $slopeLocator = new TopSlopeLocator($dataModel);
         $index = $slopeValue = $slopeLocator->locate();
+        $data['locate'] = $index;
+
+        print_r($data);
 
         $this->writeCroppedImage($cacheKey, $index, $this->outputPath);
 
