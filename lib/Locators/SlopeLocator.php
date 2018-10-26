@@ -15,42 +15,28 @@ class SlopeLocator {
 
     protected $direction = 0;
 
+    protected $list = [];
+
     public function __construct(ImageDataModel $dataModel) {
         $this->dataModel = $dataModel;
         $this->startingPosition = $dataModel->yDarkTopValue;
     }
 
-    protected function findLargestSlope(array $list, int $direction):array {
-        $darkestValue = max($list);
-        $index = array_search($darkestValue, $list);
+    public function locate():int {
+        $average = MathHelper::average(array_slice($this->list, 0, 10));
 
-        $maxDifference = $maxDifferencePosition = 0;
-        for ($y = 0; $y <= self::Y_BORDER_TARGET_MAX; $y++) {
-            $offsetIndexA = $index + ($y * $direction);
-            $offsetIndexB = $index + (($y + self::Y_DIFFERENCE_DISTANCE) * $direction);
+        $filteredList = array_filter($this->list, function($value) use ($average) {
+            return $value > $average * 1.5;
+        });
 
-            if (empty($list[$offsetIndexA]) || empty($list[$offsetIndexB])) {
-                // Colors aren't found for what we are looking for
-                continue;
-            }
-
-            $colorA = $list[$offsetIndexA];
-            if ($colorA < $darkestValue - self::DARKNESS_THRESHOLD) {
-                // Darker value in the comparison isn't dark enough
-                break;
-            }
-
-            $difference = abs($colorA - $list[$offsetIndexB]);
-            if ($difference > $maxDifference) {
-                $maxDifference = $difference;
-                $maxDifferencePosition = round(MathHelper::avg([$offsetIndexA, $offsetIndexB]));
+        $filteredKeys = array_keys($filteredList);
+        foreach($filteredKeys as $key => $value) {
+            $diff = ($filteredKeys[$key + (6 * $this->direction)] ?? 0) - $value;
+            if ($diff === 6) {
+                return $value;
             }
         }
-
-        return [
-            'position' => $maxDifferencePosition,
-            'slope' => $maxDifference,
-        ];
+        return 0;
     }
 
 }
