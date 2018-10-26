@@ -1,9 +1,11 @@
 <?php
 
 use \Helpers\FileSystemHelper;
+use \Helpers\MathHelper;
 use \Locators\DarkBorderLocator;
 use \Locators\SproketLocator;
 use \Locators\TopSlopeLocator;
+use \Locators\BottomSlopeLocator;
 
 class ImageAction {
 
@@ -47,13 +49,16 @@ class ImageAction {
         $dataModel->yDarkTopValue = $darkBorderData['top'];
         $dataModel->yDarkBottomValue = $darkBorderData['bottom'];
 
-        $slopeLocator = new TopSlopeLocator($dataModel);
-        $index = $slopeValue = $slopeLocator->locate();
-        $data['locate'] = $index;
+        $pointList = [];
+        $topLocator = new TopSlopeLocator($dataModel);
+        $pointList[] = $topLocator->locate();
 
-        print_r($data);
+        $bottomLocator = new BottomSlopeLocator($dataModel);
+        $pointList[] = $bottomLocator->locate();
 
-        $this->writeCroppedImage($cacheKey, $index, $this->outputPath);
+        $adjustedTop = MathHelper::average($pointList, true) - 500;
+
+        $this->writeCroppedImage($cacheKey, $adjustedTop, $this->outputPath);
 
         // print_r([
         //     'border top' => $data['top'],
