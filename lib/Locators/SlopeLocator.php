@@ -24,9 +24,9 @@ class SlopeLocator {
 
     public function locate():int {
         $average = MathHelper::average(array_slice($this->list, 0, 10));
-
+        
         $filteredList = array_filter($this->list, function($value) use ($average) {
-            return $value > $average * $this->dataModel->lightToDarkDifference;
+            return $value > $this->getDifference($average);
         });
 
         $filteredKeys = array_keys($filteredList);
@@ -39,4 +39,9 @@ class SlopeLocator {
         return 0;
     }
 
+    private function getDifference(float $average): float {
+        $value = ($average > 7) ? 2 : 1.3;
+
+        return $average * $value;
+    }
 }

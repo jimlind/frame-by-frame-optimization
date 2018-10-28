@@ -9,7 +9,7 @@ class TopSlopeLocator extends SlopeLocator{
 
     public function __construct(ImageDataModel $dataModel) {
         parent::__construct($dataModel);
-        $this->list = $this->dataModel->getTopCompositeColumn();
+        $this->list = $this->dataModel->getTopSlopeColumn();
     }
 
 }
