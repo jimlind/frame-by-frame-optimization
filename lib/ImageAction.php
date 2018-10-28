@@ -50,11 +50,17 @@ class ImageAction {
         $dataModel->yDarkBottomValue = $darkBorderData['bottom'];
 
         $pointList = [];
-        $topLocator = new TopSlopeLocator($dataModel);
-        $pointList[] = $topLocator->locate();
+        while (count(array_filter($pointList)) < 2) {
+            $pointList = [];
 
-        $bottomLocator = new BottomSlopeLocator($dataModel);
-        $pointList[] = $bottomLocator->locate();
+            $topLocator = new TopSlopeLocator($dataModel);
+            $pointList[] = $topLocator->locate();
+
+            $bottomLocator = new BottomSlopeLocator($dataModel);
+            $pointList[] = $bottomLocator->locate();
+
+            $dataModel->lightToDarkDifference -= 0.05;
+        }
 
         $adjustedTop = MathHelper::average($pointList, true) - 500;
 

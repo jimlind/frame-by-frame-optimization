@@ -26,7 +26,7 @@ class SlopeLocator {
         $average = MathHelper::average(array_slice($this->list, 0, 10));
 
         $filteredList = array_filter($this->list, function($value) use ($average) {
-            return $value > $average * 1.5;
+            return $value > $average * $this->dataModel->lightToDarkDifference;
         });
 
         $filteredKeys = array_keys($filteredList);

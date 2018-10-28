@@ -15,6 +15,8 @@ class ImageDataModel {
     public $yDarkTopValue = 0;
     public $yDarkBottomValue = 0;
 
+    public $lightToDarkDifference = 2;
+
     protected $resource = null;
 
     protected $centerColumn = [];
