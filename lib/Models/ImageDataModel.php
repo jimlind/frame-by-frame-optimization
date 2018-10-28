@@ -84,7 +84,7 @@ class ImageDataModel {
 
     private function getCompositeColumn(int $startingY, int $direction, int $size): array {
         $valueList = [];
-        foreach (range($startingY, $startingY + (100 * $direction)) as $y) {
+        foreach (range($startingY, $startingY + ($size * $direction)) as $y) {
             $valueList[$y] = ImageHelper::getRowAverageBrightness($this->resource, self::X_LEFT_VALUE, self::X_RIGHT_VALUE, $y);
         }
 
