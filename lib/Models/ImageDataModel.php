@@ -66,15 +66,23 @@ class ImageDataModel {
         return $this->sproketColumn;
     }
 
-    public function getTopCompositeColumn(): array {
-        return $this->getCompositeColumn($this->yDarkTopValue, 1);
+    public function getTopBorderColumn(): array {
+        return $this->getCompositeColumn($this->ySprocketValue - 100, 1, 200);
     }
 
-    public function getBottomCompositeColumn(): array {
-        return $this->getCompositeColumn($this->yDarkBottomValue, -1);
+    public function getBottomBorderColumn(): array {
+        return $this->getCompositeColumn($this->ySprocketValue + 1000, 1, 200);
     }
 
-    private function getCompositeColumn(int $startingY, int $direction): array {
+    public function getTopSlopeColumn(): array {
+        return $this->getCompositeColumn($this->yDarkTopValue, 1, 100);
+    }
+
+    public function getBottomSlopeColumn(): array {
+        return $this->getCompositeColumn($this->yDarkBottomValue, -1, 100);
+    }
+
+    private function getCompositeColumn(int $startingY, int $direction, int $size): array {
         $valueList = [];
         foreach (range($startingY, $startingY + (100 * $direction)) as $y) {
             $valueList[$y] = ImageHelper::getRowAverageBrightness($this->resource, self::X_LEFT_VALUE, self::X_RIGHT_VALUE, $y);

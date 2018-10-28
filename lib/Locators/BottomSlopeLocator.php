@@ -9,6 +9,6 @@ class BottomSlopeLocator extends SlopeLocator{
 
     public function __construct(ImageDataModel $dataModel) {
         parent::__construct($dataModel);
-        $this->list = $this->dataModel->getBottomCompositeColumn();
+        $this->list = $this->dataModel->getBottomSlopeColumn();
     }
 }
