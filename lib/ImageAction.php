@@ -50,26 +50,20 @@ class ImageAction {
         $dataModel->yDarkBottomValue = $darkBorderData['bottom'];
 
         $pointList = [];
-        while (count(array_filter($pointList)) < 2) {
-            $pointList = [];
+        $topLocator = new TopSlopeLocator($dataModel);
+        $pointList[] = $topLocator->locate();
 
-            $topLocator = new TopSlopeLocator($dataModel);
-            $pointList[] = $topLocator->locate();
+        $bottomLocator = new BottomSlopeLocator($dataModel);
+        $pointList[] = $bottomLocator->locate();
 
-            $bottomLocator = new BottomSlopeLocator($dataModel);
-            $pointList[] = $bottomLocator->locate();
-
-            $dataModel->lightToDarkDifference -= 0.05;
+        // TODO: Different Logic if Top or Bottom were found?
+        if (count(array_filter($pointList)) == 2) {
+            $adjustedTop = MathHelper::average($pointList, true) - 500;
+        } else {
+            $adjustedTop = $dataModel->ySprocketValue + 30;
         }
 
-        $adjustedTop = MathHelper::average($pointList, true) - 500;
-
         $this->writeCroppedImage($cacheKey, $adjustedTop, $this->outputPath);
-
-        // print_r([
-        //     'border top' => $data['top'],
-        //     'sproket center' => $sproketValue,
-        // ]);
     }
 
     protected function fixDistort(string $imageFile) : string {
