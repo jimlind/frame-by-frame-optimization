@@ -19,17 +19,8 @@ class DarkBorderLocator {
         $brightnessList = $this->dataModel->getCenterColumn();
         $middleY = round(count($brightnessList) / 2);
 
-        // print_r([
-
-        // ]);
-
         $topHalfList = array_slice($brightnessList, $this->sproketY - 100, 200, true);
         $bottomHalfList = array_slice($brightnessList, $this->sproketY + 1000, 200, true);
-
-        print_r([
-            $topHalfList,
-            $bottomHalfList,
-        ]);
 
         $topHalfList = $this->dataModel->getTopBorderColumn();
         $bottomHalfList =  $this->dataModel->getBottomBorderColumn();
@@ -76,11 +67,8 @@ class DarkBorderLocator {
 
     protected function findLargeDarkBlock(array $valueList): int {
         $min = min($valueList);
-        $a = [];
         while ($min < 20) {
-            $a[] = $min;
             $filteredList = array_filter($valueList, function ($a) use ($min) { return ($a <= $min);}); 
-            //print_r($filteredList);
             $newList = $newListCount = $keyList = [];
             $prevKey = 0;
             foreach ($filteredList as $key => $value) {
@@ -94,12 +82,9 @@ class DarkBorderLocator {
                 $prevKey = $key;
             }
 
-            print_r([$newList, $newListCount]);
-
             $maxCount = max($newListCount);
-            if ($maxCount > 10) {
+            if ($maxCount > 20) {
                 $index = array_search($maxCount, $newListCount);
-                print_r($a);
                 return MathHelper::average($newList[$index]);
             }
 
