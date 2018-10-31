@@ -6,7 +6,7 @@ use \Models\ImageDataModel;
 
 class SproketLocator {
 
-    const Y_SPROCKET_MIN = 300;
+    const Y_SPROCKET_MIN = 250;
     const Y_SPROCKET_MAX = 400;
 
     protected $dataModel = null;
