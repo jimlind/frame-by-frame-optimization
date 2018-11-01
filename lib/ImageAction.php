@@ -56,10 +56,21 @@ class ImageAction {
         $bottomLocator = new BottomSlopeLocator($dataModel);
         $pointList[] = $bottomLocator->locate();
 
-        // TODO: Different Logic if Top or Bottom were found?
+        // Debug Data
+        print_r([$dataModel->ySprocketValue, $darkBorderData, $pointList]);
+        print_r([$pointList[0], $dataModel->ySprocketValue + 30]);
+
         if (count(array_filter($pointList)) == 2) {
+            // Top and bottom points were found
             $adjustedTop = MathHelper::average($pointList, true) - 500;
+        } elseif (!empty($pointList[0])) {
+            // Top point was found
+            $adjustedTop = $pointList[0] - 30;
+        } elseif (!empty($pointList[1])) {
+            // Bottom point was found
+            $adjustedTop = $pointList[1] - 1010;
         } else {
+            // No points found
             $adjustedTop = $dataModel->ySprocketValue + 30;
         }
 
