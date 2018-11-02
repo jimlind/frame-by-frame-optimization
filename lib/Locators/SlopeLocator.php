@@ -40,6 +40,6 @@ class SlopeLocator {
     }
 
     private function getDifference(float $average): float {
-        return (2) * $average - 2;
+        return (1.9 * $average) - 2.1;
     }
 }
