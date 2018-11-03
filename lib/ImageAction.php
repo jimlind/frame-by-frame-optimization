@@ -6,6 +6,7 @@ use \Locators\DarkBorderLocator;
 use \Locators\SproketLocator;
 use \Locators\TopSlopeLocator;
 use \Locators\BottomSlopeLocator;
+use \Models\ImageDataModel;
 
 class ImageAction {
 
@@ -13,6 +14,8 @@ class ImageAction {
     const X_POSITION = 550;
 
     public $keepPositioningImage = false;
+
+    public $previousImageDataModel = null;
 
     protected $inputPath = '';
 
@@ -23,7 +26,7 @@ class ImageAction {
         $this->outputPath = $outputPath;
     }
 
-    public function run() {
+    public function run(): ImageDataModel {
         $cacheKey = $this->fixDistort($this->inputPath);
 
         $tmpFilePath = '';
@@ -44,6 +47,11 @@ class ImageAction {
         $sproketLocator = new SproketLocator($dataModel);
         $dataModel->ySprocketValue = $sproketLocator->locate();
 
+        if ($dataModel->ySprocketValue === 0) {
+            echo 'NO SPROCKET FOUND ON ' . $this->inputPath . PHP_EOL;
+            return $dataModel;
+        }
+
         $darkBorderLocator = new DarkBorderLocator($dataModel);
         $darkBorderData = $darkBorderLocator->locate();
         $dataModel->yDarkTopValue = $darkBorderData['top'];
@@ -51,33 +59,51 @@ class ImageAction {
 
         $pointList = [];
         $topLocator = new TopSlopeLocator($dataModel);
-        $pointList[] = $topLocator->locate();
+        $dataModel->yCalculatedTopValue = $topLocator->locate();
 
         $bottomLocator = new BottomSlopeLocator($dataModel);
-        $pointList[] = $bottomLocator->locate();
+        $dataModel->yCalculatedBottomValue = $bottomLocator->locate();
 
         // Debug Data
-        print_r([$dataModel->ySprocketValue, $darkBorderData, $pointList]);
-        print_r([$pointList[0], $dataModel->ySprocketValue + 30]);
+        //print_r([$dataModel->ySprocketValue, $darkBorderData, $pointList]);
+        //print_r([$pointList[1], MathHelper::average($pointList, true) - 500]);
 
-        if (count(array_filter($pointList)) == 2) {
+        $halfHeight = ($dataModel->yCalculatedBottomValue - $dataModel->yCalculatedTopValue) / 2;
+        $validModel = $dataModel->hasValidTopAndBottomCalculations();
+
+        $previousHalfHeight = ($this->previousImageDataModel->yCalculatedBottomValue - $this->previousImageDataModel->yCalculatedTopValue) / 2;
+        $previousValidModel = $this->previousImageDataModel->hasValidTopAndBottomCalculations();
+
+        if ($validModel) {
             // Top and bottom points were found
-            $adjustedTop = MathHelper::average($pointList, true) - 500;
-        } elseif (!empty($pointList[0])) {
+            $values = [$dataModel->yCalculatedTopValue, $dataModel->yCalculatedBottomValue];
+            $midPoint = MathHelper::average($values, true);
+            $found = 'top & bottom';
+        } elseif ($dataModel->yCalculatedTopValue !== 0 && $previousValidModel) {
             // Top point was found
-            $adjustedTop = $pointList[0] - 30;
-        } elseif (!empty($pointList[1])) {
+            $midPoint = $dataModel->yCalculatedTopValue + $previousHalfHeight;
+            $found = 'top';
+        } elseif ($dataModel->yCalculatedBottomValue !== 0 && $previousValidModel) {
             // Bottom point was found
-            $adjustedTop = $pointList[1] - 1010;
-        } else {
+            $midPoint = $dataModel->yCalculatedBottomValue - $previousHalfHeight;
+            $found = 'bottom';
+        } elseif ($previousValidModel) {
             // No points found
-            $adjustedTop = $dataModel->ySprocketValue + 30;
+            $topDifference = $this->previousImageDataModel->yCalculatedTopValue - $this->previousImageDataModel->ySprocketValue; 
+            $midPoint = $dataModel->ySprocketValue - $topDifference - $previousHalfHeight;
+            $found = 'sprocket adjusted';
+        } else {
+            $midPoint = $dataModel->ySprocketValue + 555; // Optimized for Folder 5
+            $found = 'sprocket raw';
         }
 
-        $this->writeCroppedImage($cacheKey, $adjustedTop, $this->outputPath);
+        echo 'Crop created using data from '. $found .PHP_EOL;
+        $this->writeCroppedImage($cacheKey, $midPoint - 500, $this->outputPath);
+
+        return $dataModel;
     }
 
-    protected function fixDistort(string $imageFile) : string {
+    protected function fixDistort(string $imageFile): string {
         // Setup the points to use for distortion writing
         $perspectivePoints = [
             '560,610 560,610',

@@ -1,9 +1,14 @@
 <?php
+
+use \Models\ImageDataModel;
+
 class ImageFolderAction {
 
     public $fileGlobInput = '/c*.jpeg';
     
     public $keepPositioningImage = false;
+
+    public $previousImageDataModel = null;
 
     protected $inputPath = '';
 
@@ -14,14 +19,23 @@ class ImageFolderAction {
         $this->outputPath = $outputPath;
     }
 
-    public function run() {        
+    public function run(): ImageDataModel {
+        $previousImageDataModel = new ImageDataModel('');
         $imageFileList = glob($this->inputPath . $this->fileGlobInput);
         foreach ($imageFileList as $imageFile) {
             $outputFile = $this->outputPath . DIRECTORY_SEPARATOR . basename($imageFile);
 
             $imageAction = new ImageAction($imageFile, $outputFile);
             $imageAction->keepPositioningImage = $this->keepPositioningImage;
-            $imageAction->run();
+            $imageAction->previousImageDataModel = $this->previousImageDataModel;
+            $imageDataModel = $imageAction->run();
+
+            if ($imageDataModel->hasValidTopAndBottomCalculations()) {
+                // Overwrite existing data model
+                $this->previousImageDataModel = $imageDataModel;
+            }
         }
+
+        return $this->previousImageDataModel;
     }
 }
