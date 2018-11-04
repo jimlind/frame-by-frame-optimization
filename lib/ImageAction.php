@@ -64,12 +64,12 @@ class ImageAction {
         $dataModel->yCalculatedBottomValue = $bottomLocator->locate();
 
         // Debug Data
-        print_r([
-            $dataModel->ySprocketValue,
-            $dataModel->yCalculatedBottomValue,
-            $dataModel->yCalculatedTopValue,
-            $darkBorderData,
-        ]);
+        // print_r([
+        //     $dataModel->ySprocketValue,
+        //     $dataModel->yCalculatedBottomValue,
+        //     $dataModel->yCalculatedTopValue,
+        //     $darkBorderData,
+        // ]);
 
         $halfHeight = ($dataModel->yCalculatedBottomValue - $dataModel->yCalculatedTopValue) / 2;
         $validModel = $dataModel->hasValidTopAndBottomCalculations();
