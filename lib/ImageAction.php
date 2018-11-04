@@ -57,7 +57,6 @@ class ImageAction {
         $dataModel->yDarkTopValue = $darkBorderData['top'];
         $dataModel->yDarkBottomValue = $darkBorderData['bottom'];
 
-        $pointList = [];
         $topLocator = new TopSlopeLocator($dataModel);
         $dataModel->yCalculatedTopValue = $topLocator->locate();
 
@@ -65,8 +64,12 @@ class ImageAction {
         $dataModel->yCalculatedBottomValue = $bottomLocator->locate();
 
         // Debug Data
-        //print_r([$dataModel->ySprocketValue, $darkBorderData, $pointList]);
-        //print_r([$pointList[1], MathHelper::average($pointList, true) - 500]);
+        print_r([
+            $dataModel->ySprocketValue,
+            $dataModel->yCalculatedBottomValue,
+            $dataModel->yCalculatedTopValue,
+            $darkBorderData,
+        ]);
 
         $halfHeight = ($dataModel->yCalculatedBottomValue - $dataModel->yCalculatedTopValue) / 2;
         $validModel = $dataModel->hasValidTopAndBottomCalculations();
