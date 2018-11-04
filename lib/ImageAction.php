@@ -63,14 +63,6 @@ class ImageAction {
         $bottomLocator = new BottomSlopeLocator($dataModel);
         $dataModel->yCalculatedBottomValue = $bottomLocator->locate();
 
-        // Debug Data
-        // print_r([
-        //     $dataModel->ySprocketValue,
-        //     $dataModel->yCalculatedBottomValue,
-        //     $dataModel->yCalculatedTopValue,
-        //     $darkBorderData,
-        // ]);
-
         $halfHeight = ($dataModel->yCalculatedBottomValue - $dataModel->yCalculatedTopValue) / 2;
         $validModel = $dataModel->hasValidTopAndBottomCalculations();
 
@@ -93,15 +85,15 @@ class ImageAction {
         } elseif ($previousValidModel) {
             // No points found
             $topDifference = $this->previousImageDataModel->yCalculatedTopValue - $this->previousImageDataModel->ySprocketValue; 
-            $midPoint = $dataModel->ySprocketValue - $topDifference - $previousHalfHeight;
+            $midPoint = $dataModel->ySprocketValue + $topDifference + $previousHalfHeight;
             $found = 'sprocket adjusted';
         } else {
             $midPoint = $dataModel->ySprocketValue + 555; // Optimized for Folder 5
             $found = 'sprocket raw';
         }
 
-        echo 'Crop created using data from '. $found .PHP_EOL;
-        $this->writeCroppedImage($cacheKey, $midPoint - 500, $this->outputPath);
+        echo 'Crop created using data from '. $found . PHP_EOL;
+        $this->writeCroppedImage($cacheKey, round($midPoint) - 500, $this->outputPath);
 
         return $dataModel;
     }
