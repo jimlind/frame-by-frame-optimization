@@ -36,6 +36,9 @@ $fileGlobInput = '/' . ($limitArgList[1] ?? 'c*') . '.jpeg';
 // Check CLI argument for positing image retention
 $keepPositioningImage = (bool) ($argv[4] ?? false);
 
+// Storage for previous data model
+$previousImageDataModel = new Models\ImageDataModel();
+
 // Find all neccessary image folders and loop over them
 foreach (glob($capPathGlobInput) as $imageInputPath) {
     $imageOutputPath = $outputPath . DIRECTORY_SEPARATOR . basename($imageInputPath);
@@ -43,7 +46,12 @@ foreach (glob($capPathGlobInput) as $imageInputPath) {
     $imageFolderAction = new ImageFolderAction($imageInputPath, $imageOutputPath);
     $imageFolderAction->fileGlobInput = $fileGlobInput;
     $imageFolderAction->keepPositioningImage = $keepPositioningImage;
-    $imageFolderAction->run();
+    $imageFolderAction->previousImageDataModel = $previousImageDataModel;
+    $imageDataModel = $imageFolderAction->run();
+
+    if ($imageDataModel->hasValidTopAndBottomCalculations()) {
+        $previousImageDataModel = $imageDataModel;
+    }
 }
 
 // TODO: When I know this is working perfectly renable video conversion
