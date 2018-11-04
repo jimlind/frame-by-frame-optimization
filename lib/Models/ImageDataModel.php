@@ -15,6 +15,9 @@ class ImageDataModel {
     public $yDarkTopValue = 0;
     public $yDarkBottomValue = 0;
 
+    public $yCalculatedTopValue = 0;
+    public $yCalculatedBottomValue = 0;
+
     public $lightToDarkDifference = 2;
 
     protected $resource = null;
@@ -29,8 +32,9 @@ class ImageDataModel {
 
     protected $compositeColumn = [];
     
-    public function __construct(string $imageFilePath) {
-        $this->resource = imagecreatefromjpeg($imageFilePath);
+    public function __construct(string $imageFilePath = '') {
+        // Allow this to silently fail if we have a bad image path
+        $this->resource = @imagecreatefromjpeg($imageFilePath);
     }
 
     public function getCenterColumn(): array {
@@ -64,6 +68,10 @@ class ImageDataModel {
         }
 
         return $this->sproketColumn;
+    }
+
+    public function hasValidTopAndBottomCalculations(): bool {
+        return ($this->yCalculatedTopValue !== 0 && $this->yCalculatedBottomValue !== 0);
     }
 
     public function getTopBorderColumn(): array {
