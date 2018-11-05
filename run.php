@@ -39,6 +39,11 @@ $keepPositioningImage = (bool) ($argv[4] ?? false);
 // Storage for previous data model
 $previousImageDataModel = new Models\ImageDataModel();
 
+// SOME TEST DATA
+// $previousImageDataModel->ySprocketValue = 549;
+// $previousImageDataModel->yCalculatedTopValue = 598;
+// $previousImageDataModel->yCalculatedBottomValue = 1587;
+
 // Find all neccessary image folders and loop over them
 foreach (glob($capPathGlobInput) as $imageInputPath) {
     $imageOutputPath = $outputPath . DIRECTORY_SEPARATOR . basename($imageInputPath);
