@@ -24,7 +24,12 @@ class SlopeLocator {
 
     public function locate():int {
         $average = MathHelper::average(array_slice($this->list, 0, 10));
-        
+
+        if (($average - MathHelper::average($this->list)) < 0.7) {
+            echo 'Nothing interested found with direction: ' . $this->direction . PHP_EOL;
+            return 0;
+        }
+
         $filteredList = array_filter($this->list, function($value) use ($average) {
             return $value > $this->getDifference($average);
         });
