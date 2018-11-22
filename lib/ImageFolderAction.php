@@ -5,7 +5,7 @@ use \Models\ImageDataModel;
 class ImageFolderAction {
 
     public $fileGlobInput = '/c*.jpeg';
-    
+
     public $keepPositioningImage = false;
 
     public $previousImageDataModel = null;
@@ -20,15 +20,19 @@ class ImageFolderAction {
     }
 
     public function run(): ImageDataModel {
-        $previousImageDataModel = new ImageDataModel('');
+        $previousImageDataModel = new ImageDataModel();
         $imageFileList = glob($this->inputPath . $this->fileGlobInput);
         foreach ($imageFileList as $imageFile) {
+            $timeStart = microtime(true);
             $outputFile = $this->outputPath . DIRECTORY_SEPARATOR . basename($imageFile);
 
             $imageAction = new ImageAction($imageFile, $outputFile);
             $imageAction->keepPositioningImage = $this->keepPositioningImage;
             $imageAction->previousImageDataModel = $this->previousImageDataModel;
             $imageDataModel = $imageAction->run();
+
+            $timeDiff = round(microtime(true) - $timeStart, 2);
+            echo 'Image converstion took '. $timeDiff . ' seconds' . PHP_EOL;
 
             if ($imageDataModel->hasValidTopAndBottomCalculations()) {
                 // Overwrite existing data model

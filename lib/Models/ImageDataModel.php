@@ -31,10 +31,10 @@ class ImageDataModel {
     protected $sproketColumn = [];
 
     protected $compositeColumn = [];
-    
-    public function __construct(string $imageFilePath = '') {
+
+    public function __construct($resource = null) {
         // Allow this to silently fail if we have a bad image path
-        $this->resource = @imagecreatefromjpeg($imageFilePath);
+        $this->resource = $resource;
     }
 
     public function getCenterColumn(): array {
