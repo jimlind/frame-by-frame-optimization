@@ -21,28 +21,23 @@ class ImageAction {
 
     protected $outputPath = '';
 
+    protected $im = null;
+
     public function __construct(string $inputPath, string $outputPath) {
         $this->inputPath = $inputPath;
         $this->outputPath = $outputPath;
+        $this->im = new Imagick();
     }
 
     public function run(): ImageDataModel {
-        $cacheKey = $this->fixDistort($this->inputPath);
+        // Updates the global $im
+        $this->fixDistort($this->inputPath);
 
-        $tmpFilePath = '';
-        if ($this->keepPositioningImage) {
-            $outputDir = dirname($this->outputPath);
-            FileSystemHelper::md($outputDir);
-            $tmpFilePath = implode([
-                $outputDir,
-                DIRECTORY_SEPARATOR,
-                '_',
-                basename($this->outputPath)
-            ]);
-        }
-        $tmpFile = $this->writePositioningImage($cacheKey, $tmpFilePath);
-        
-        $dataModel = new \Models\ImageDataModel($tmpFile);
+        $this->im->setImageFormat('bmp');
+        $imageBlob = $this->im->getImageBlob();
+        $resource = imagecreatefromstring($imageBlob);
+
+        $dataModel = new \Models\ImageDataModel($resource);
 
         $sproketLocator = new SproketLocator($dataModel);
         $dataModel->ySprocketValue = $sproketLocator->locate();
@@ -84,7 +79,7 @@ class ImageAction {
             $found = 'bottom';
         } elseif ($previousValidModel) {
             // No points found
-            $topDifference = $this->previousImageDataModel->yCalculatedTopValue - $this->previousImageDataModel->ySprocketValue; 
+            $topDifference = $this->previousImageDataModel->yCalculatedTopValue - $this->previousImageDataModel->ySprocketValue;
             $midPoint = $dataModel->ySprocketValue + $topDifference + $previousHalfHeight;
             $found = 'sprocket adjusted';
         } else {
@@ -93,71 +88,39 @@ class ImageAction {
         }
 
         echo 'Crop created using data from '. $found . PHP_EOL;
-        $this->writeCroppedImage($cacheKey, round($midPoint) - 500, $this->outputPath);
+        $this->writeCroppedImage(round($midPoint) - 500, $this->outputPath);
 
         return $dataModel;
     }
 
-    protected function fixDistort(string $imageFile): string {
+    protected function fixDistort(string $imageFile) {
         // Setup the points to use for distortion writing
-        $perspectivePoints = [
-            '560,610 560,610',
-            '560,1650 560,1650',
-            '1960,1635 1960,1650',
-            '1960,610 1960,610',
-        ];
-        
-        // Fix distorition and write to cache
-        $cacheKey = 'mpc:tmp';
-        $fixDistortCommand = [
-            'convert',
-            $imageFile,
-            '-distort Barrel "0.0 -0.03 0.0 1.03"',
-            '-write mpr:distort',
-            '+delete',
-            '\( mpr:distort',
-            '-distort Perspective "'.implode(' ', $perspectivePoints).'"',
-            '+write',
-            $cacheKey,
-            '\) null:',
-        ];
-        shell_exec(implode(' ', $fixDistortCommand));
+        $pp = [
+            560,610,
+            560,610,
 
-        return $cacheKey;
+            560,1650,
+            560,1650,
+
+            1960,1635,
+            1960,1650,
+
+            1960,610,
+            1960,610,
+        ];
+
+        $this->im->readImage($imageFile);
+        $this->im->distortImage(Imagick::DISTORTION_BARREL, [0.0, -0.03, 0.0, 1.03], true);
+        $this->im->distortImage(Imagick::DISTORTION_PERSPECTIVE, $pp, true);
     }
 
-    protected function writePositioningImage(string $cacheKey, string $tmpFile = '') : string{
-        // If nothing was supplied.. use a tmp file
-        if (empty($tmpFile)) {
-            $tmpFile = sys_get_temp_dir() . '/film-sprocket-hole.jpg';
-        }
-
-        // Perform conversion
-        $cmd = [
-            'convert',
-            $cacheKey,
-            '-quality 92',
-            $tmpFile
-        ];
-        shell_exec(implode(' ', $cmd));
-
-        return $tmpFile;
-    }
-
-    protected function writeCroppedImage(string $cacheKey, int $yPosition, string $croppedFile) {
+    protected function writeCroppedImage(int $yPosition, string $croppedFile) {
         FileSystemHelper::md(dirname($croppedFile));
-        
-        // Finalize the image and write to disk
-        $cropCommand = [
-            'convert',
-            $cacheKey,
-            '-crop 1500x1100+' . self::X_POSITION . '+' . $yPosition,
-            '-sharpen 0x2',
-            '-quality 100',
-            $croppedFile,
-        ];
-        shell_exec(implode(' ', $cropCommand));
-        //print_r(implode(' ', $cropCommand) . PHP_EOL);
+
+        $this->im->cropImage(1500, 1100, self::X_POSITION, $yPosition);
+        $this->im->sharpenImage(0, 2);
+        $this->im->setcompressionquality(100);
+        $this->im->writeimage($croppedFile);
 
         echo $croppedFile.' written'.PHP_EOL;
 
