@@ -88,7 +88,7 @@ class ImageAction {
         }
 
         echo 'Crop created using data from '. $found . PHP_EOL;
-        $this->writeCroppedImage(round($midPoint) - 500, $this->outputPath);
+        $this->writeCroppedImage(round($midPoint) - 540, $this->outputPath);
 
         return $dataModel;
     }
